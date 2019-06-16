@@ -2,11 +2,6 @@
   "name": "welsh-whacker",
   "version": "0.0.0",
   "description": "todo",
-  "devDependencies": {
-    "elm": "^0.19.0-no-deps",
-    "elm-hot": "^1.1.0",
-    "node-elm-compiler": "^5.0.3",
-    "parcel": "1.12.3"
-  },
+  "devDependencies": {},
   "license": "MIT"
 }
