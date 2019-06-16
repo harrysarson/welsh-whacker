@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "todo",
   "scripts": {
-    "start": "parcel site/index.html"
+    "start": "parcel site/index.html --port 8080"
   },
   "dependencies": {
     "http-server": "0.11.1"
