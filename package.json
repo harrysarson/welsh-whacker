@@ -2,12 +2,6 @@
   "name": "welsh-whacker",
   "version": "0.0.0",
   "description": "todo",
-  "scripts": {
-    "start": "parcel site/index.html --port 8080"
-  },
-  "dependencies": {
-    "http-server": "0.11.1"
-  },
   "devDependencies": {
     "elm": "^0.19.0-no-deps",
     "elm-hot": "^1.1.0",
