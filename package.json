@@ -1,0 +1,10 @@
+{
+  "name": "welsh-whacker",
+  "version": "0.0.0",
+  "description": "todo",
+  "devDependencies": {
+    "cssnano": "^4.1.10",
+    "node-elm-compiler": "^5.0.3"
+  },
+  "license": "MIT"
+}
