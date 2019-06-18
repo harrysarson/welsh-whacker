@@ -21,7 +21,7 @@ import Url.Parser.Query
 main =
     Browser.application
         { init = init
-        , onUrlRequest = \_ -> Debug.todo "Handle url request"
+        , onUrlRequest = UrlRequest
         , onUrlChange = UrlChange
         , view = view
         , subscriptions = \_ -> Sub.none
@@ -62,6 +62,7 @@ type alias Model =
 type Msg
     = Typing String
     | UrlChange Url.Url
+    | UrlRequest Browser.UrlRequest
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,6 +76,9 @@ update msg model =
             )
 
         UrlChange _ ->
+            ( model, Cmd.none )
+
+        UrlRequest _ ->
             ( model, Cmd.none )
 
 
@@ -101,7 +105,16 @@ view model =
                 [ Font.size 20
                 ]
             <|
-                Element.column [ width (px 800), height shrink, centerY, centerX, spacing 36, padding 10, explain Debug.todo ]
+                Element.column
+                    [ width (px 800)
+                    , height shrink
+                    , centerY
+                    , centerX
+                    , spacing 36
+                    , padding 10
+
+                    -- , explain Debug.todo
+                    ]
                     ([ el
                         [ Region.heading 1
                         , alignLeft

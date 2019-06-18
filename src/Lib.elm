@@ -3,9 +3,9 @@ module Lib exposing (approxSearch)
 import Trie exposing (Trie)
 
 
-approxSearch : String -> Int -> Trie a -> a
+approxSearch : String -> Int -> Trie a -> Maybe a
 approxSearch word maxCost trie =
-    Debug.todo "search"
+    Nothing
 
 
 
