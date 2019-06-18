@@ -49,7 +49,7 @@ init () url key =
 
 urlParser : Url.Parser.Parser (Maybe String -> a) a
 urlParser =
-    (Url.Parser.oneOf [ Url.Parser.top, Url.Parser.s "welsh-whacker" ]) <?> Url.Parser.Query.string "input"
+    Url.Parser.oneOf [ Url.Parser.top, Url.Parser.s "welsh-whacker" ] <?> Url.Parser.Query.string "input"
 
 
 type alias Model =
