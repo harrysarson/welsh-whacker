@@ -3,7 +3,7 @@ module Main exposing (Model, Msg(..), init, main, search, update, urlParser, vie
 {-| -}
 
 import Browser
-import Browser.Navigation as Nav
+import Browser.Navigation
 import Content.WelshPlaces
 import Design.Color as Color
 import Element exposing (..)
