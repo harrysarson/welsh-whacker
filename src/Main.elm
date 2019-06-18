@@ -29,7 +29,7 @@ main =
         }
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd never )
+init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd never )
 init () url key =
     let
         input =
