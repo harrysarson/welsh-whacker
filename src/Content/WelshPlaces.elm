@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 
 type Place
     = Cardiff
-    | Breakon
+    | Brecon
 
 
 type alias Info =
@@ -22,8 +22,8 @@ getInfo place =
             { name = "Cardiff"
             , blurb = """The capital of Wales, etc, etc"""
             }
-        Breakon ->
-            { name = "Breakon"
+        Brecon ->
+            { name = "Brecon"
             , blurb = """Army training, etc, etc"""
             }
 
@@ -32,4 +32,4 @@ infoLookup : Dict String Place
 infoLookup =
     Dict.empty
         |> Dict.insert "Cardiff" Cardiff
-        |> Dict.insert "Breakon" Breakon
+        |> Dict.insert "Brecon" Brecon
