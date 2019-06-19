@@ -13,6 +13,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
+import Lib
 import Url
 import Url.Builder
 import Url.Parser exposing ((<?>))
@@ -55,7 +56,7 @@ urlParser =
 
 type alias Model =
     { input : String
-    , place : Maybe Content.WelshPlaces.Place
+    , place : List ( Int, Content.WelshPlaces.Place )
     , key : Browser.Navigation.Key
     }
 
@@ -86,24 +87,23 @@ update msg model =
 view : Model -> Browser.Document Msg
 view model =
     let
-        info =
-            Maybe.map Content.WelshPlaces.getInfo model.place
+        infos =
+            List.map (Tuple.mapSecond Content.WelshPlaces.getInfo) model.place
 
         infoView =
-            case info of
-                Just { name, blurb } ->
-                    [ Element.el
-                        [ Region.heading 2
-                        , alignLeft
-                        , Font.size 24
+            infos
+                |> List.concatMap
+                    (\( cost, { name, blurb } ) ->
+                        [ Element.el
+                            [ Region.heading 2
+                            , alignLeft
+                            , Font.size 24
+                            ]
+                            (Element.text (String.fromInt cost ++ ": " ++ name))
+                        , Element.el []
+                            (Element.paragraph [] [ Element.text blurb ])
                         ]
-                        (Element.text name)
-                    , Element.el []
-                        (Element.paragraph [] [ Element.text blurb ])
-                    ]
-
-                Nothing ->
-                    []
+                    )
 
         body =
             Element.layout
@@ -141,6 +141,6 @@ view model =
     }
 
 
-search : String -> Maybe Content.WelshPlaces.Place
+search : String -> List ( Int, Content.WelshPlaces.Place )
 search word =
-    Dict.get word Content.WelshPlaces.infoLookup
+    Lib.approxSearch word 10000 Content.WelshPlaces.infoLookup

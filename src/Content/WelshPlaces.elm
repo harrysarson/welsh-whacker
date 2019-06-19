@@ -7,6 +7,7 @@ import Lib.Trie as Trie
 type Place
     = Cardiff
     | Brecon
+    | Kitten
 
 
 type alias Info =
@@ -28,9 +29,22 @@ getInfo place =
             , blurb = """Army training, etc, etc"""
             }
 
+        Kitten ->
+            { name = "Kitten"
+            , blurb = """NOT A WELSH PLACE!"""
+            }
 
-infoLookup : Dict String Place
+
+infoLookup : Trie.Trie Place
 infoLookup =
-    Dict.empty
-        |> Dict.insert "Cardiff" Cardiff
-        |> Dict.insert "Brecon" Brecon
+    let
+        empty =
+            Trie.empty
+
+        insert =
+            Trie.insert
+    in
+    empty
+        |> insert "Cardiff" Cardiff
+        |> insert "Brecon" Brecon
+        |> insert "Kitten" Kitten
