@@ -13,6 +13,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
 import Url
+import Dict
 import Url.Builder
 import Url.Parser exposing ((<?>))
 import Url.Parser.Query
@@ -91,7 +92,11 @@ view model =
         infoView =
             case info of
                 Just { name, blurb } ->
-                    [ Element.el []
+                    [ Element.el
+                        [ Region.heading 2
+                        , alignLeft
+                        , Font.size 24
+                        ]
                         (Element.text name)
                     , Element.el []
                         (Element.paragraph [] [ Element.text blurb ])
@@ -125,7 +130,7 @@ view model =
                         { onChange = Typing
                         , text = model.input
                         , placeholder = Nothing
-                        , label = Input.labelLeft [] (Element.text "Random Characters")
+                        , label = Input.labelLeft [] (Element.text "")
                         }
                      ]
                         ++ infoView
@@ -138,8 +143,4 @@ view model =
 
 search : String -> Maybe Content.WelshPlaces.Place
 search word =
-    if word == "" then
-        Nothing
-
-    else
-        Just Content.WelshPlaces.Cardiff
+    Dict.get word Content.WelshPlaces.infoLookup
