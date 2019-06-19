@@ -1,7 +1,7 @@
 module Content.WelshPlaces exposing (Info, Place(..), getInfo, infoLookup)
 
-import Lib.Trie as Trie
 import Dict exposing (Dict)
+import Lib.Trie as Trie
 
 
 type Place
@@ -22,6 +22,7 @@ getInfo place =
             { name = "Cardiff"
             , blurb = """The capital of Wales, etc, etc"""
             }
+
         Brecon ->
             { name = "Brecon"
             , blurb = """Army training, etc, etc"""
