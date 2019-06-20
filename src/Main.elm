@@ -113,10 +113,9 @@ view model =
                 Element.column
                     [ width (px 800)
                     , height shrink
-                    , centerY
                     , centerX
                     , spacing 36
-                    , padding 10
+                    , padding 100
 
                     -- , explain Debug.todo
                     ]

@@ -53,6 +53,7 @@ approxSearch word maxCost (Trie maybeValue children) =
 
         _ ->
             matches.satisfiesCost
+                |> List.sortBy Tuple.first
 
 
 type alias ApproxSearchHelpResult a =
