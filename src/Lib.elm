@@ -44,8 +44,6 @@ approxSearch word maxCost (Trie maybeValue children) =
                     { satisfiesCost = []
                     , minimumCost = Nothing
                     }
-                |> Debug.log "matches"
-
     in
     case ( List.isEmpty matches.satisfiesCost, matches.minimumCost ) of
         ( True, Just m ) ->
@@ -164,7 +162,6 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
             , minimumCost =
                 maybeValue
                     |> Maybe.map (\value -> ( ourCost, value ))
-                    |> Debug.log "min"
             }
     in
     if minimum currentRow < maxCost || ourMatch.minimumCost == Nothing then
