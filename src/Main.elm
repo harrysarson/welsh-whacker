@@ -1,8 +1,7 @@
-module Main exposing (Model, Msg(..), init, main, search, update, urlParser, view)
-
-{-| -}
+module Main exposing (main)
 
 import Browser
+import Browser.Dom
 import Browser.Navigation
 import Content.WelshPlaces
 import Design.Color as Color
@@ -13,7 +12,9 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
+import Html.Attributes
 import Lib
+import Task
 import Url
 import Url.Builder
 import Url.Parser exposing ((<?>))
@@ -23,15 +24,15 @@ import Url.Parser.Query
 main =
     Browser.application
         { init = init
-        , onUrlRequest = UrlRequest
-        , onUrlChange = UrlChange
+        , onUrlRequest = \_ -> Noop
+        , onUrlChange = \_ -> Noop
         , view = view
         , subscriptions = \_ -> Sub.none
         , update = update
         }
 
 
-init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd never )
+init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init () url key =
     let
         input =
@@ -42,10 +43,10 @@ init () url key =
                 |> Maybe.withDefault ""
     in
     ( { input = input
-      , place = search input
+      , place = Lib.waleSearch input
       , key = key
       }
-    , Cmd.none
+    , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
 
 
@@ -63,24 +64,20 @@ type alias Model =
 
 type Msg
     = Typing String
-    | UrlChange Url.Url
-    | UrlRequest Browser.UrlRequest
+    | Noop
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Typing new ->
-            ( { model | input = new, place = search new }
+            ( { model | input = new, place = Lib.waleSearch new }
             , Browser.Navigation.replaceUrl
                 model.key
                 (Url.Builder.relative [] [ Url.Builder.string "input" new ])
             )
 
-        UrlChange _ ->
-            ( model, Cmd.none )
-
-        UrlRequest _ ->
+        Noop ->
             ( model, Cmd.none )
 
 
@@ -125,7 +122,9 @@ view model =
                         , Font.size 36
                         ]
                         (text "The Welsh Whacker")
-                     , Input.text []
+                     , Input.text
+                        [ Element.htmlAttribute <| Html.Attributes.id "wales-place-input"
+                        ]
                         { onChange = Typing
                         , text = model.input
                         , placeholder = Nothing
@@ -138,8 +137,3 @@ view model =
     { title = "Welsh Whacker"
     , body = [ body ]
     }
-
-
-search : String -> List ( Int, Content.WelshPlaces.Place )
-search word =
-    Lib.approxSearch word (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup

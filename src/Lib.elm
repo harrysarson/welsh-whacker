@@ -1,32 +1,18 @@
-module Lib exposing (approxSearch)
+module Lib exposing (waleSearch)
 
+import Content.WelshPlaces
 import Dict exposing (Dict)
 import Lib.Trie exposing (Trie(..))
 import List.Nonempty exposing (Nonempty)
 
 
-construct : a -> List a -> Nonempty a
-construct el list =
-    List.Nonempty.replaceTail list (List.Nonempty.fromElement el)
-
-
-minimum : Nonempty comparable -> comparable
-minimum list =
-    case List.minimum (List.Nonempty.tail list) of
-        Just minFromTail ->
-            min (List.Nonempty.head list) minFromTail
-
-        Nothing ->
-            List.Nonempty.head list
-
-
-minBy : (a -> comparable) -> a -> a -> a
-minBy f x y =
-    if f x < f y then
-        x
+waleSearch : String -> List ( Int, Content.WelshPlaces.Place )
+waleSearch word =
+    if word == "" then
+        []
 
     else
-        y
+        approxSearch word (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
 
 
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
@@ -170,3 +156,31 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
 
     else
         ourMatch
+
+
+
+-- UTILITY --
+
+
+construct : a -> List a -> Nonempty a
+construct el list =
+    List.Nonempty.replaceTail list (List.Nonempty.fromElement el)
+
+
+minimum : Nonempty comparable -> comparable
+minimum list =
+    case List.minimum (List.Nonempty.tail list) of
+        Just minFromTail ->
+            min (List.Nonempty.head list) minFromTail
+
+        Nothing ->
+            List.Nonempty.head list
+
+
+minBy : (a -> comparable) -> a -> a -> a
+minBy f x y =
+    if f x < f y then
+        x
+
+    else
+        y
