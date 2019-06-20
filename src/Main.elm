@@ -143,4 +143,4 @@ view model =
 
 search : String -> List ( Int, Content.WelshPlaces.Place )
 search word =
-    Lib.approxSearch word 10000 Content.WelshPlaces.infoLookup
+    Lib.approxSearch word (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup

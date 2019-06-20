@@ -6,6 +6,7 @@ import Lib.Trie as Trie
 
 type Place
     = Cardiff
+    | Cardiff2
     | Brecon
     | Kitten
 
@@ -34,6 +35,11 @@ getInfo place =
             , blurb = """NOT A WELSH PLACE!"""
             }
 
+        Cardiff2 ->
+            { name = "Cardiff2"
+            , blurb = """NOT A Cardiff PLACE!"""
+            }
+
 
 infoLookup : Trie.Trie Place
 infoLookup =
@@ -46,5 +52,6 @@ infoLookup =
     in
     empty
         |> insert "Cardiff" Cardiff
+        |> insert "Cardiff2" Cardiff2
         |> insert "Brecon" Brecon
         |> insert "Kitten" Kitten

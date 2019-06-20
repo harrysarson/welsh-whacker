@@ -1,6 +1,6 @@
 module Lib exposing (approxSearch)
 
-import Dict
+import Dict exposing (Dict)
 import Lib.Trie exposing (Trie(..))
 import List.Nonempty exposing (Nonempty)
 
@@ -10,21 +10,85 @@ construct el list =
     List.Nonempty.replaceTail list (List.Nonempty.fromElement el)
 
 
+minimum : Nonempty comparable -> comparable
+minimum list =
+    case List.minimum (List.Nonempty.tail list) of
+        Just minFromTail ->
+            min (List.Nonempty.head list) minFromTail
+
+        Nothing ->
+            List.Nonempty.head list
+
+
+minBy : (a -> comparable) -> a -> a -> a
+minBy f x y =
+    if f x < f y then
+        x
+
+    else
+        y
+
+
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
 approxSearch word maxCost (Trie maybeValue children) =
     let
         currentRow =
             construct 0 (List.range 1 (String.length word))
+
+        matches =
+            children
+                |> approxSearchFolder
+                    word
+                    currentRow
+                    maxCost
+                    { satisfiesCost = []
+                    , minimumCost = Nothing
+                    }
+                |> Debug.log "matches"
+
     in
-    children
-        |> Dict.foldl
-            (\k v b ->
-                approxSearchHelp k word currentRow maxCost v ++ b
-            )
-            []
+    case ( List.isEmpty matches.satisfiesCost, matches.minimumCost ) of
+        ( True, Just m ) ->
+            [ m ]
+
+        _ ->
+            matches.satisfiesCost
 
 
-approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> List ( Int, a )
+type alias ApproxSearchHelpResult a =
+    { satisfiesCost : List ( Int, a )
+    , minimumCost : Maybe ( Int, a )
+    }
+
+
+approxSearchFolder : String -> Nonempty Int -> Int -> ApproxSearchHelpResult a -> Dict Char (Trie a) -> ApproxSearchHelpResult a
+approxSearchFolder word currentRow maxCost initial =
+    Dict.foldl
+        (\childsLetter child matches ->
+            let
+                childMatches =
+                    approxSearchHelp childsLetter word currentRow maxCost child
+            in
+            { satisfiesCost = childMatches.satisfiesCost ++ matches.satisfiesCost
+            , minimumCost =
+                case ( childMatches.minimumCost, matches.minimumCost ) of
+                    ( Nothing, Nothing ) ->
+                        Nothing
+
+                    ( Just m, Nothing ) ->
+                        Just m
+
+                    ( Nothing, Just m ) ->
+                        Just m
+
+                    ( Just m1, Just m2 ) ->
+                        Just <| minBy Tuple.first m1 m2
+            }
+        )
+        initial
+
+
+approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> ApproxSearchHelpResult a
 approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
     let
         columns =
@@ -89,23 +153,22 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
             List.Nonempty.head currentRow
 
         ourMatch =
-            if ourCost <= maxCost then
-                case maybeValue of
-                    Just value ->
+            { satisfiesCost =
+                case ( ourCost <= maxCost, maybeValue ) of
+                    ( True, Just value ) ->
                         [ ( ourCost, value ) ]
 
-                    Nothing ->
+                    _ ->
                         []
-
-            else
-                []
-
-        checkChildren l child =
-            approxSearchHelp l word (List.Nonempty.reverse currentRow) maxCost child
+            , minimumCost =
+                maybeValue
+                    |> Maybe.map (\value -> ( ourCost, value ))
+                    |> Debug.log "min"
+            }
     in
-    children
-        |> Dict.foldl
-            (\k v b ->
-                checkChildren k v ++ b
-            )
-            ourMatch
+    if minimum currentRow < maxCost || ourMatch.minimumCost == Nothing then
+        children
+            |> approxSearchFolder word (List.Nonempty.reverse currentRow) maxCost ourMatch
+
+    else
+        ourMatch
