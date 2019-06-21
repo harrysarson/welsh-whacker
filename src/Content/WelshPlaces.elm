@@ -51,7 +51,7 @@ infoLookup =
             Trie.insert
     in
     empty
-        |> insert "Cardiff" Cardiff
-        |> insert "Cardiff2" Cardiff2
-        |> insert "Brecon" Brecon
-        |> insert "Kitten" Kitten
+        |> insert "cardiff" Cardiff
+        |> insert "cardiff2" Cardiff2
+        |> insert "brecon" Brecon
+        |> insert "kitten" Kitten

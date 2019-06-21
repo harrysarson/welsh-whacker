@@ -12,7 +12,11 @@ waleSearch word =
         []
 
     else
-        approxSearch word (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
+        let
+            lowerCase =
+                String.toLower word
+        in
+        approxSearch lowerCase (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
 
 
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
