@@ -24,7 +24,7 @@ import Url.Parser.Query
 main =
     Browser.application
         { init = init
-        , onUrlRequest = \_ -> Noop
+        , onUrlRequest = ClickedLink
         , onUrlChange = \_ -> Noop
         , view = view
         , subscriptions = \_ -> Sub.none
@@ -64,6 +64,7 @@ type alias Model =
 
 type Msg
     = Typing String
+    | ClickedLink Browser.UrlRequest
     | Noop
 
 
@@ -76,6 +77,18 @@ update msg model =
                 model.key
                 (Url.Builder.relative [] [ Url.Builder.string "input" new ])
             )
+
+        ClickedLink urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Cmd.none
+                    )
+
+                Browser.External url ->
+                    ( model
+                    , Browser.Navigation.load url
+                    )
 
         Noop ->
             ( model, Cmd.none )
@@ -90,7 +103,7 @@ view model =
         infoView =
             infos
                 |> List.concatMap
-                    (\( cost, { name, blurb } ) ->
+                    (\( cost, { name, wikipedia } ) ->
                         [ Element.el
                             [ Region.heading 2
                             , alignLeft
@@ -98,7 +111,12 @@ view model =
                             ]
                             (Element.text (String.fromInt cost ++ ": " ++ name))
                         , Element.el []
-                            (Element.paragraph [] [ Element.text blurb ])
+                            (Element.link
+                                []
+                                { url = "https://en.wikipedia.org/wiki/" ++ wikipedia
+                                , label = Element.text "read more"
+                                }
+                            )
                         ]
                     )
 
