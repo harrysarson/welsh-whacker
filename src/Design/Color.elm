@@ -1,4 +1,4 @@
-module Design.Color exposing (blue, darkBlue, green, grey, red, white)
+module Design.Color exposing (black, blue, darkBlue, green, grey, red, transparent, white)
 
 import Element
 
@@ -9,6 +9,14 @@ white =
 
 grey =
     Element.rgb 0.9 0.9 0.9
+
+
+black =
+    Element.rgb 0 0 0
+
+
+transparent =
+    Element.rgba 0 0 0 0
 
 
 blue =

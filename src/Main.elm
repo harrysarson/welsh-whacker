@@ -200,24 +200,24 @@ view model =
                 [ Background.color Color.white
                 , Border.rounded 100
                 , Border.width 3
-                , Border.color (E.rgb 0 0 0)
+                , Border.color Color.black
                 , E.paddingXY padding (padding // 4)
                 , E.centerX
                 , E.htmlAttribute (Html.Attributes.style "transform" "translateY(-50%)")
-                , Font.color (E.rgb 0 0 0)
+                , Font.color Color.black
                 ]
                 [ Input.text
                     [ E.htmlAttribute <| Html.Attributes.id "wales-place-input"
                     , E.htmlAttribute <| Html.Attributes.style "width" "20em"
                     , Background.color (E.rgba 0 0 0 0)
                     , E.padding 5
-                    , Border.width 0
+                    , Border.color Color.transparent
                     , E.focused
                         [ Border.shadow
                             { offset = ( 0, 0 )
                             , size = 0
                             , blur = 0
-                            , color = E.rgb 0 0 0
+                            , color = Color.black
                             }
                         ]
                     , E.height E.fill
@@ -240,10 +240,36 @@ view model =
                                 )
                             )
                     }
-                , Input.button
-                    []
+                , let
+                    enabled =
+                        String.length model.input == 0
+                  in
+                  Input.button
+                    (List.concat
+                        [ [ Font.color
+                                (if enabled then
+                                    Color.grey
+
+                                 else
+                                    Color.black
+                                )
+                          ]
+                        , if enabled then
+                            [ E.htmlAttribute (Html.Attributes.style "cursor" "text")
+                            , E.htmlAttribute (Html.Attributes.style "pointer-events" "none")
+                            ]
+
+                          else
+                            [ E.pointer ]
+                        ]
+                    )
                     { label = E.text "Go"
-                    , onPress = Just DoSearch
+                    , onPress =
+                        if enabled then
+                            Nothing
+
+                        else
+                            Just DoSearch
                     }
                 ]
 
