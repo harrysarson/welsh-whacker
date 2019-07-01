@@ -32,7 +32,8 @@ import Url
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query
-
+import Process
+import Task
 
 main =
     Browser.application
@@ -64,10 +65,10 @@ init () url key =
       , place =
             case urlThing of
                 Town t ->
-                    Lib.waleSearch t |> List.head
+                    search t
 
                 _ ->
-                    Nothing
+                    Searching
       , key = key
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
@@ -91,10 +92,14 @@ urlParser =
                 (Url.Parser.Query.string "input" |> Url.Parser.Query.map (Maybe.map Input))
                 (Url.Parser.Query.string "town" |> Url.Parser.Query.map (Maybe.map Town))
 
+type PlaceResult
+    = Searching
+    | FoundPlace  ( Int, Content.WelshPlaces.Place )
+    | FindingPlace String
 
 type alias Model =
     { input : String
-    , place : Maybe ( Int, Content.WelshPlaces.Place )
+    , place : PlaceResult
     , key : Browser.Navigation.Key
     }
 
@@ -103,6 +108,7 @@ type Msg
     = Typing String
     | ClickedLink Browser.UrlRequest
     | UrlChange Url.Url
+    | RequestSearch
     | DoSearch
     | GoToInput
     | Noop
@@ -135,33 +141,42 @@ update msg model =
                     )
 
         GoToInput ->
-            ( { model | place = Nothing }
+            ( { model | place = Searching }
             , case model.place of
-                Just _ ->
+                FoundPlace _ ->
                     Browser.Navigation.back model.key 1
 
-                Nothing ->
+                _ ->
                     Cmd.none
             )
 
         DoSearch ->
-            let
-                newPlace =
-                    Lib.waleSearch model.input |> List.head
-            in
-            ( { model | place = newPlace }
-            , case newPlace of
-                Just ( _, newPlace_ ) ->
+            case model.place of
+                FindingPlace str ->
                     let
-                        newName =
-                            (Content.WelshPlaces.getInfo newPlace_).name
+                        newPlace =
+                            search str
                     in
-                    Browser.Navigation.pushUrl
-                        model.key
-                        (Url.Builder.relative [] [ Url.Builder.string "town" newName ])
+                    ( { model | place = newPlace }
+                    , case newPlace of
+                        FoundPlace ( _, newPlace_ ) ->
+                            let
+                                newName =
+                                    (Content.WelshPlaces.getInfo newPlace_).name
+                            in
+                            Browser.Navigation.pushUrl
+                                model.key
+                                (Url.Builder.relative [] [ Url.Builder.string "town" newName ])
 
-                Nothing ->
-                    Cmd.none
+                        _ ->
+                            Cmd.none
+                    )
+                FoundPlace _ -> (model, Cmd.none)
+                Searching -> (model, Cmd.none)
+
+        RequestSearch ->
+            ( { model | place = FindingPlace model.input }
+            , Task.perform (\() -> DoSearch) (Process.sleep 500)
             )
 
         UrlChange url ->
@@ -171,11 +186,20 @@ update msg model =
             ( model, Cmd.none )
 
 
+type ShowClass
+    = Show
+    | Hide
+    | Hiding
+
+
 view : Model -> Browser.Document Msg
 view model =
     let
         town =
-            Maybe.map (Tuple.second >> Content.WelshPlaces.getInfo) model.place
+            case model.place of
+                FoundPlace (_, place) -> Just (Content.WelshPlaces.getInfo place)
+                Searching -> Nothing
+                FindingPlace _ -> Nothing
 
         -- straddledBox =
         --     case town of
@@ -195,9 +219,11 @@ view model =
         --                     )
         --                 ]
         --             )
+
         inputBox =
             E.row
-                [ Background.color Color.white
+                [ E.htmlAttribute <| Html.Attributes.class "input-box"
+                , Background.color Color.white
                 , Border.rounded 100
                 , Border.width 3
                 , Border.color Color.black
@@ -221,7 +247,7 @@ view model =
                             }
                         ]
                     , E.height E.fill
-                    , Lib.onEnter DoSearch
+                    , Lib.onEnter RequestSearch
                     ]
                     { onChange = Typing
                     , text = model.input
@@ -269,7 +295,7 @@ view model =
                             Nothing
 
                         else
-                            Just DoSearch
+                            Just RequestSearch
                     }
                 ]
 
@@ -288,6 +314,11 @@ view model =
                     [ E.width E.fill
                     , E.height E.fill
                     , E.centerX
+                    , E.htmlAttribute <| Html.Attributes.class (case model.place of
+                        Searching -> "show"
+                        FoundPlace _  -> "hide"
+                        FindingPlace _ -> "hiding"
+                        )
                     ]
                     [ E.el
                         [ E.width E.fill
@@ -330,30 +361,31 @@ view model =
                         ]
                         (case town of
                             Just town_ ->
-                                [ E.image
-                                    [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
-                                    , E.width (E.px <| padding * 8)
-                                    , E.height (E.shrink |> E.minimum (padding * 4))
-                                    , E.centerX
+                                List.filterMap identity
+                                    [ Just <| E.image
+                                        [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
+                                        , E.width (E.px <| padding * 8)
+                                        , E.height (E.shrink |> E.minimum (padding * 4))
+                                        , E.centerX
+                                        ]
+                                        { description = ""
+                                        , src = "https://via.placeholder.com/150"
+                                        }
+                                    , Just <| E.paragraph
+                                        [ E.htmlAttribute (Html.Attributes.style "width" "25em")
+                                        , E.centerX
+                                        ]
+                                        [ E.text town_.blurb
+                                        ]
+                                    , Just <| E.column
+                                        [ E.padding padding
+                                        , Events.onClick GoToInput
+                                        , E.pointer
+                                        ]
+                                        [ E.text "Search"
+                                        , E.text "Again?"
+                                        ]
                                     ]
-                                    { description = ""
-                                    , src = "https://via.placeholder.com/150"
-                                    }
-                                , E.paragraph
-                                    [ E.htmlAttribute (Html.Attributes.style "width" "25em")
-                                    , E.centerX
-                                    ]
-                                    [ E.text town_.blurb
-                                    ]
-                                , E.column
-                                    [ E.padding padding
-                                    , Events.onClick GoToInput
-                                    , E.pointer
-                                    ]
-                                    [ E.text "Search"
-                                    , E.text "Again?"
-                                    ]
-                                ]
 
                             Nothing ->
                                 [ inputBox
@@ -382,3 +414,10 @@ view model =
     { title = "Welsh Whacker"
     , body = [ body ]
     }
+
+
+search : String -> PlaceResult
+search str =
+    case Lib.waleSearch str |> List.head of
+        Just tuple -> FoundPlace tuple
+        Nothing -> Searching
