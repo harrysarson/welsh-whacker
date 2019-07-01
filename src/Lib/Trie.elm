@@ -1,4 +1,4 @@
-module Lib.Trie exposing (Trie(..), empty, insert)
+module Lib.Trie exposing (Trie(..), empty, insert, size)
 
 import Dict exposing (Dict)
 
@@ -10,6 +10,20 @@ type Trie a
 empty : Trie never
 empty =
     Trie Nothing Dict.empty
+
+
+size : Trie a -> Int
+size (Trie value children) =
+    Dict.foldr
+        (\_ child currentSize -> size child + currentSize)
+        (case value of
+            Just _ ->
+                1
+
+            Nothing ->
+                0
+        )
+        children
 
 
 insert : String -> a -> Trie a -> Trie a
