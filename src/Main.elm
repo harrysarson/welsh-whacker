@@ -49,12 +49,11 @@ init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init () url key =
     let
         urlThing =
-            Debug.log "url things"
-                (Url.Parser.parse
-                    urlParser
-                    url
-                    |> Maybe.withDefault Empty
-                )
+            Url.Parser.parse
+                urlParser
+                url
+                |> Maybe.withDefault Empty
+
     in
     ( { input =
             case urlThing of
@@ -223,6 +222,7 @@ view model =
                             }
                         ]
                     , E.height E.fill
+                    , Lib.onEnter DoSearch
                     ]
                     { onChange = Typing
                     , text = model.input

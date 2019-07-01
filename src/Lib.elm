@@ -1,7 +1,10 @@
-module Lib exposing (waleSearch)
+module Lib exposing (onEnter, waleSearch)
 
 import Content.WelshPlaces
 import Dict exposing (Dict)
+import Element
+import Html.Events
+import Json.Decode as Decode
 import Lib.Trie exposing (Trie(..))
 import List.Nonempty exposing (Nonempty)
 
@@ -17,6 +20,23 @@ waleSearch word =
                 String.toLower word
         in
         approxSearch lowerCase (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
+
+
+onEnter : msg -> Element.Attribute msg
+onEnter msg =
+    Element.htmlAttribute
+        (Html.Events.on "keyup"
+            (Decode.field "key" Decode.string
+                |> Decode.andThen
+                    (\key ->
+                        if key == "Enter" then
+                            Decode.succeed msg
+
+                        else
+                            Decode.fail "Not the enter key"
+                    )
+            )
+        )
 
 
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
