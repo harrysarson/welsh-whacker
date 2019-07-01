@@ -333,9 +333,10 @@ view model =
                                 [ E.image
                                     [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
                                     , E.width (E.px <| padding * 8)
+                                    , E.height (E.shrink |> E.minimum (padding * 4))
                                     , E.centerX
                                     ]
-                                    { description = "todo"
+                                    { description = ""
                                     , src = "https://via.placeholder.com/150"
                                     }
                                 , E.paragraph
