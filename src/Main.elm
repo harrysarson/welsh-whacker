@@ -48,12 +48,13 @@ main =
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init () url key =
     let
-        urlThing = Debug.log "url things" (
-            Url.Parser.parse
-                urlParser
-                url
-                |> Maybe.withDefault Empty
-            )
+        urlThing =
+            Debug.log "url things"
+                (Url.Parser.parse
+                    urlParser
+                    url
+                    |> Maybe.withDefault Empty
+                )
     in
     ( { input =
             case urlThing of
