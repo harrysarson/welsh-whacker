@@ -53,7 +53,6 @@ init () url key =
                 urlParser
                 url
                 |> Maybe.withDefault Empty
-
     in
     ( { input =
             case urlThing of
