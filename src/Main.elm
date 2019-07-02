@@ -511,8 +511,12 @@ view model =
                         , Font.color Color.white
                         , Font.center
                         , Font.size (fontBase * 4 // 3)
-
-                        -- , E.paddingXY 0 (padding * 3)
+                        , E.paddingEach
+                            { top = 0
+                            , left = 0
+                            , bottom = padding * 2
+                            , right = 0
+                            }
                         ]
                         (case town of
                             Just town_ ->
@@ -571,15 +575,13 @@ view model =
                                     ]
                                 , E.el
                                     [ E.width E.fill ]
-                                    (E.html
-                                        (Svg.svg
-                                            [ Html.Attributes.style "margin" "0 auto"
-                                            , Svg.Attributes.width "15em"
-
-                                            -- , Svg.Attributes.height "100%"
-                                            , Svg.Attributes.viewBox "0 0 1000 1000"
-                                            ]
-                                            [ Icons.welshDragon ]
+                                    (E.el
+                                        [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
+                                        (E.html
+                                            (Svg.svg
+                                                (Tuple.first Icons.welshDragon <| { width = "15em" })
+                                                (Tuple.second Icons.welshDragon)
+                                            )
                                         )
                                     )
                                 ]
