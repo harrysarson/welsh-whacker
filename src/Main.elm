@@ -25,6 +25,7 @@ import Element.Region as Region
 import Html
 import Html.Attributes
 import Lib
+import Process
 import Svg
 import Svg.Attributes
 import Task
@@ -32,8 +33,7 @@ import Url
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query
-import Process
-import Task
+
 
 main =
     Browser.application
@@ -92,10 +92,12 @@ urlParser =
                 (Url.Parser.Query.string "input" |> Url.Parser.Query.map (Maybe.map Input))
                 (Url.Parser.Query.string "town" |> Url.Parser.Query.map (Maybe.map Town))
 
+
 type PlaceResult
     = Searching
-    | FoundPlace  ( Int, Content.WelshPlaces.Place )
+    | FoundPlace ( Int, Content.WelshPlaces.Place )
     | FindingPlace String
+
 
 type alias Model =
     { input : String
@@ -171,8 +173,12 @@ update msg model =
                         _ ->
                             Cmd.none
                     )
-                FoundPlace _ -> (model, Cmd.none)
-                Searching -> (model, Cmd.none)
+
+                FoundPlace _ ->
+                    ( model, Cmd.none )
+
+                Searching ->
+                    ( model, Cmd.none )
 
         RequestSearch ->
             ( { model | place = FindingPlace model.input }
@@ -197,9 +203,14 @@ view model =
     let
         town =
             case model.place of
-                FoundPlace (_, place) -> Just (Content.WelshPlaces.getInfo place)
-                Searching -> Nothing
-                FindingPlace _ -> Nothing
+                FoundPlace ( _, place ) ->
+                    Just (Content.WelshPlaces.getInfo place)
+
+                Searching ->
+                    Nothing
+
+                FindingPlace _ ->
+                    Nothing
 
         -- straddledBox =
         --     case town of
@@ -219,7 +230,6 @@ view model =
         --                     )
         --                 ]
         --             )
-
         inputBox =
             E.row
                 [ E.htmlAttribute <| Html.Attributes.class "input-box"
@@ -314,11 +324,18 @@ view model =
                     [ E.width E.fill
                     , E.height E.fill
                     , E.centerX
-                    , E.htmlAttribute <| Html.Attributes.class (case model.place of
-                        Searching -> "show"
-                        FoundPlace _  -> "hide"
-                        FindingPlace _ -> "hiding"
-                        )
+                    , E.htmlAttribute <|
+                        Html.Attributes.class
+                            (case model.place of
+                                Searching ->
+                                    "show"
+
+                                FoundPlace _ ->
+                                    "hide"
+
+                                FindingPlace _ ->
+                                    "hiding"
+                            )
                     ]
                     [ E.el
                         [ E.width E.fill
@@ -362,29 +379,32 @@ view model =
                         (case town of
                             Just town_ ->
                                 List.filterMap identity
-                                    [ Just <| E.image
-                                        [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
-                                        , E.width (E.px <| padding * 8)
-                                        , E.height (E.shrink |> E.minimum (padding * 4))
-                                        , E.centerX
-                                        ]
-                                        { description = ""
-                                        , src = "https://via.placeholder.com/150"
-                                        }
-                                    , Just <| E.paragraph
-                                        [ E.htmlAttribute (Html.Attributes.style "width" "25em")
-                                        , E.centerX
-                                        ]
-                                        [ E.text town_.blurb
-                                        ]
-                                    , Just <| E.column
-                                        [ E.padding padding
-                                        , Events.onClick GoToInput
-                                        , E.pointer
-                                        ]
-                                        [ E.text "Search"
-                                        , E.text "Again?"
-                                        ]
+                                    [ Just <|
+                                        E.image
+                                            [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
+                                            , E.width (E.px <| padding * 8)
+                                            , E.height (E.shrink |> E.minimum (padding * 4))
+                                            , E.centerX
+                                            ]
+                                            { description = ""
+                                            , src = "https://via.placeholder.com/150"
+                                            }
+                                    , Just <|
+                                        E.paragraph
+                                            [ E.htmlAttribute (Html.Attributes.style "width" "25em")
+                                            , E.centerX
+                                            ]
+                                            [ E.text town_.blurb
+                                            ]
+                                    , Just <|
+                                        E.column
+                                            [ E.padding padding
+                                            , Events.onClick GoToInput
+                                            , E.pointer
+                                            ]
+                                            [ E.text "Search"
+                                            , E.text "Again?"
+                                            ]
                                     ]
 
                             Nothing ->
@@ -419,5 +439,8 @@ view model =
 search : String -> PlaceResult
 search str =
     case Lib.waleSearch str |> List.head of
-        Just tuple -> FoundPlace tuple
-        Nothing -> Searching
+        Just tuple ->
+            FoundPlace tuple
+
+        Nothing ->
+            Searching
