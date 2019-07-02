@@ -110,6 +110,7 @@ urlParser =
 
 type PlaceResult
     = Searching
+    | AboutToSearch ( Int, Content.WelshPlaces.Place )
     | FoundPlace ( Int, Content.WelshPlaces.Place )
     | FindingPlace String
 
@@ -128,6 +129,7 @@ type Msg
     | UrlChange Url.Url
     | RequestSearch
     | DoSearch
+    | RequestInput
     | GoToInput
     | ShowInfo
     | HideInfo
@@ -160,15 +162,24 @@ update msg model =
                     , Browser.Navigation.load url
                     )
 
+        RequestInput ->
+            case model.place of
+                FoundPlace p ->
+                    ( { model | place = AboutToSearch p }
+                    , Task.perform (\() -> GoToInput) (Process.sleep 500)
+                    )
+                _ ->
+                    ( model, Cmd.none )
+
         GoToInput ->
-            ( { model | place = Searching }
-            , case model.place of
-                FoundPlace _ ->
-                    Browser.Navigation.back model.key 1
+            case Debug.log "place" model.place of
+                AboutToSearch _ ->
+                    ({ model | place = Searching }
+                    , Browser.Navigation.back model.key 1
+                    )
 
                 _ ->
-                    Cmd.none
-            )
+                    (model, Cmd.none)
 
         DoSearch ->
             case model.place of
@@ -192,10 +203,7 @@ update msg model =
                             Cmd.none
                     )
 
-                FoundPlace _ ->
-                    ( model, Cmd.none )
-
-                Searching ->
+                _ ->
                     ( model, Cmd.none )
 
         RequestSearch ->
@@ -234,10 +242,10 @@ view model =
                 FoundPlace ( _, place ) ->
                     Just (Content.WelshPlaces.getInfo place)
 
-                Searching ->
-                    Nothing
+                AboutToSearch (_, place) ->
+                    Just (Content.WelshPlaces.getInfo place)
 
-                FindingPlace _ ->
+                _ ->
                     Nothing
 
         -- straddledBox =
@@ -267,7 +275,6 @@ view model =
                 , Border.color Color.black
                 , E.paddingXY padding (padding // 4)
                 , E.centerX
-                , E.htmlAttribute (Html.Attributes.style "transform" "translateY(-50%)")
                 , Font.color Color.black
                 ]
                 [ Input.text
@@ -463,9 +470,12 @@ view model =
                     , E.centerX
                     , E.htmlAttribute <|
                         Html.Attributes.class
-                            (case model.place of
+                            (Debug.log "showing" <| case model.place of
                                 Searching ->
                                     "show"
+
+                                AboutToSearch _ ->
+                                     "showing"
 
                                 FoundPlace _ ->
                                     "hide"
@@ -523,7 +533,7 @@ view model =
                                 List.filterMap identity
                                     [ Just <|
                                         E.image
-                                            [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(-20%)")
+                                            [ E.htmlAttribute (Html.Attributes.class "town-image")
                                             , E.width (E.px <| padding * 8)
                                             , E.height (E.shrink |> E.minimum (padding * 4))
                                             , E.centerX
@@ -542,7 +552,7 @@ view model =
                                         E.row
                                             [ E.width E.fill ]
                                             [ E.el
-                                                [ Events.onClick GoToInput
+                                                [ Events.onClick RequestInput
                                                 , E.pointer
                                                 , E.alignLeft
                                                 ]
