@@ -5,11 +5,15 @@ module Main exposing (main)
   - welsh data
   - <div>Icons made by <a href="https://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/"                 title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"                 title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
   - welsh lion: <https://upload.wikimedia.org/wikipedia/commons/1/11/>
+  - <https://level.app/svg-to-elm>
+  - <div>Icons made by <a href="https://www.flaticon.com/authors/good-ware" title="Good Ware">Good Ware</a> from <a href="https://www.flaticon.com/"                 title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"                 title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 
 -}
 
 import Browser
 import Browser.Dom
+import Html.Events
+import Browser.Events
 import Browser.Navigation
 import Content.WelshPlaces
 import Design.Color as Color
@@ -24,6 +28,7 @@ import Element.Input as Input
 import Element.Region as Region
 import Html
 import Html.Attributes
+import Json.Decode
 import Lib
 import Process
 import Svg
@@ -41,9 +46,17 @@ main =
         , onUrlRequest = ClickedLink
         , onUrlChange = UrlChange
         , view = view
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         , update = update
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    if model.showInfo then
+        Browser.Events.onKeyDown (Json.Decode.succeed HideInfo)
+    else
+        Sub.none
 
 
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
@@ -70,6 +83,7 @@ init () url key =
                 _ ->
                     Searching
       , key = key
+      , showInfo = False
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
@@ -103,6 +117,7 @@ type alias Model =
     { input : String
     , place : PlaceResult
     , key : Browser.Navigation.Key
+    , showInfo : Bool
     }
 
 
@@ -113,6 +128,8 @@ type Msg
     | RequestSearch
     | DoSearch
     | GoToInput
+    | ShowInfo
+    | HideInfo
     | Noop
 
 
@@ -183,6 +200,16 @@ update msg model =
         RequestSearch ->
             ( { model | place = FindingPlace model.input }
             , Task.perform (\() -> DoSearch) (Process.sleep 500)
+            )
+
+        ShowInfo ->
+            ( { model | showInfo = True }
+            , Cmd.none
+            )
+
+        HideInfo ->
+            ( { model | showInfo = False }
+            , Cmd.none
             )
 
         UrlChange url ->
@@ -309,6 +336,107 @@ view model =
                     }
                 ]
 
+        infoBox =
+            let
+                lineSpacing =
+                    padding // 3 + 1
+            in
+            E.el
+                [ Events.onClick HideInfo
+                , E.width fill
+                , E.height fill
+                , E.padding (padding * 4)
+                ]
+                (E.el
+                    [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed (Noop, True))
+                    , E.width fill
+                    , E.height fill
+                    , Background.color (Lib.setOpacity 0.9 Color.black)
+                    , Border.color Color.red
+                    , Border.width (padding // 5 + 1)
+                    , Border.solid
+                    , Font.color Color.white
+                    , E.padding padding
+                    ]
+                    (E.textColumn
+                        [ E.spacing padding
+                        , Font.size (fontBase * 5 // 4)
+                        ]
+                        [ E.paragraph
+                            [ E.spacing lineSpacing ]
+                            [ E.text "The Welsh Whacker is a website build by Harry Sarson and Phillip Gull."
+                            , E.text "The Welsh Whacker is written in "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://elm-lang.org"
+                                , label = E.text "elm"
+                                }
+                            , E.text " and the source code is available at "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://github.com/harrysarson/welsh-whacker/"
+                                , label = E.text "github.com/harrysarson/welsh-whacker"
+                                }
+                            , E.text "."
+                            ]
+                        , E.paragraph
+                            [ E.spacing lineSpacing ]
+                            [ E.text "The list of Welsh town names were compiled with help from Paul Stenning's "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://www.paulstenning.com/uk-towns-and-counties-list"
+                                , label = E.text "\"UK Towns and Counties List\""
+                                }
+                            , E.text "."
+                            ]
+                        , E.paragraph
+                            [ E.spacing lineSpacing ]
+                            [ E.text "The search icon is made by "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://www.freepik.com"
+                                , label = E.text "Freepik"
+                                }
+                            , E.text " from "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://www.flaticon.com"
+                                , label = E.text "www.flaticon.com"
+                                }
+                            , E.text " and is licensed by "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "http://creativecommons.org/licenses/by/3.0"
+                                , label = E.text "CC 3.0 BY"
+                                }
+                            , E.text "."
+                            ]
+                        , E.paragraph
+                            [ E.spacing lineSpacing ]
+                            [ E.text "The information icon is made by "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://www.flaticon.com/authors/good-ware"
+                                , label = E.text "Good Ware"
+                                }
+                            , E.text " from "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://www.flaticon.com"
+                                , label = E.text "www.flaticon.com"
+                                }
+                            , E.text " and is licensed by "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "http://creativecommons.org/licenses/by/3.0"
+                                , label = E.text "CC 3.0 BY"
+                                }
+                            , E.text "."
+                            ]
+                        ]
+                    )
+                )
+
         padding =
             25
 
@@ -317,8 +445,15 @@ view model =
 
         body =
             E.layout
-                [ Font.size fontBase
-                ]
+                ([ Just (Font.size fontBase)
+                 , if model.showInfo then
+                    Just (E.inFront infoBox)
+
+                   else
+                    Nothing
+                 ]
+                    |> List.filterMap identity
+                )
             <|
                 E.column
                     [ E.width E.fill
@@ -398,15 +533,30 @@ view model =
                                             [ E.text town_.blurb
                                             ]
                                     , Just <|
-                                        E.el
-                                            [ Events.onClick GoToInput
-                                            , E.pointer
+                                        E.row
+                                            [ E.width E.fill ]
+                                            [ E.el
+                                                [ Events.onClick GoToInput
+                                                , E.pointer
+                                                , E.alignLeft
+                                                ]
+                                                (E.html <|
+                                                    Svg.svg
+                                                        (Tuple.first Icons.searchAgain <| { width = "7em" })
+                                                        (Tuple.second Icons.searchAgain)
+                                                )
+                                            , E.el
+                                                [ Events.onClick ShowInfo
+                                                , E.pointer
+                                                , E.alignRight
+                                                , E.padding padding
+                                                ]
+                                                (E.html <|
+                                                    Svg.svg
+                                                        (Tuple.first Icons.information <| { width = "3em" })
+                                                        (Tuple.second Icons.information)
+                                                )
                                             ]
-                                            (E.html <|
-                                                Svg.svg
-                                                    (Tuple.first Icons.searchAgain <| { width = "7em" })
-                                                    (Tuple.second Icons.searchAgain)
-                                            )
                                     ]
 
                             Nothing ->

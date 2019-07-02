@@ -1,4 +1,4 @@
-module Lib exposing (onEnter, waleSearch)
+module Lib exposing (enterDecoder, onEnter, setOpacity, waleSearch)
 
 import Content.WelshPlaces
 import Dict exposing (Dict)
@@ -22,21 +22,37 @@ waleSearch word =
         approxSearch lowerCase (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
 
 
+enterDecoder : msg -> Decode.Decoder msg
+enterDecoder msg =
+    Decode.field "key" Decode.string
+        |> Decode.andThen
+            (\key ->
+                if key == "Enter" then
+                    Decode.succeed msg
+
+                else
+                    Decode.fail "Not the enter key"
+            )
+
+
 onEnter : msg -> Element.Attribute msg
 onEnter msg =
     Element.htmlAttribute
-        (Html.Events.on "keyup"
-            (Decode.field "key" Decode.string
-                |> Decode.andThen
-                    (\key ->
-                        if key == "Enter" then
-                            Decode.succeed msg
+        (Html.Events.on "keyup" (enterDecoder msg))
 
-                        else
-                            Decode.fail "Not the enter key"
-                    )
-            )
-        )
+
+setOpacity : Float -> Element.Color -> Element.Color
+setOpacity alpha color =
+    let
+        { red, green, blue } =
+            Element.toRgb color
+    in
+    Element.fromRgb
+        { red = red
+        , green = green
+        , blue = blue
+        , alpha = alpha
+        }
 
 
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
