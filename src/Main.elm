@@ -352,14 +352,15 @@ view model =
                             , E.paddingXY 0 (padding * 3)
                             , Font.color Color.red
                             ]
-                            (text
-                                (case town of
-                                    Just t ->
-                                        t.name
+                            (case town of
+                                Just t ->
+                                    E.text t.name
 
-                                    Nothing ->
-                                        "Welsh Travel Whacker"
-                                )
+                                Nothing ->
+                                    E.html <|
+                                        Svg.svg
+                                            (Tuple.first Icons.theWelshWhacker <| { width = "20em" })
+                                            (Tuple.second Icons.theWelshWhacker)
                             )
                         )
                     , E.column
@@ -397,14 +398,15 @@ view model =
                                             [ E.text town_.blurb
                                             ]
                                     , Just <|
-                                        E.column
-                                            [ E.padding padding
-                                            , Events.onClick GoToInput
+                                        E.el
+                                            [ Events.onClick GoToInput
                                             , E.pointer
                                             ]
-                                            [ E.text "Search"
-                                            , E.text "Again?"
-                                            ]
+                                            (E.html <|
+                                                Svg.svg
+                                                    (Tuple.first Icons.searchAgain <| { width = "7em" })
+                                                    (Tuple.second Icons.searchAgain)
+                                            )
                                     ]
 
                             Nothing ->
