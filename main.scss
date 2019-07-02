@@ -7,7 +7,7 @@ html, body {
     & > * {
         &:first-child, &:last-child > * {
             transition-property: transform;
-            transition-duration: 0.8s;
+            transition-duration: 0.4s;
         }
     }
 }

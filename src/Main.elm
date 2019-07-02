@@ -39,6 +39,7 @@ import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query
 
+changeDelay = 350
 
 main =
     Browser.application
@@ -166,7 +167,7 @@ update msg model =
             case model.place of
                 FoundPlace p ->
                     ( { model | place = AboutToSearch p }
-                    , Task.perform (\() -> GoToInput) (Process.sleep 500)
+                    , Task.perform (\() -> GoToInput) (Process.sleep changeDelay)
                     )
                 _ ->
                     ( model, Cmd.none )
@@ -208,7 +209,7 @@ update msg model =
 
         RequestSearch ->
             ( { model | place = FindingPlace model.input }
-            , Task.perform (\() -> DoSearch) (Process.sleep 500)
+            , Task.perform (\() -> DoSearch) (Process.sleep changeDelay)
             )
 
         ShowInfo ->
