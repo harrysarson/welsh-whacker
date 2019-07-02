@@ -12,7 +12,6 @@ module Main exposing (main)
 
 import Browser
 import Browser.Dom
-import Html.Events
 import Browser.Events
 import Browser.Navigation
 import Content.WelshPlaces
@@ -28,6 +27,7 @@ import Element.Input as Input
 import Element.Region as Region
 import Html
 import Html.Attributes
+import Html.Events
 import Json.Decode
 import Lib
 import Process
@@ -55,6 +55,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     if model.showInfo then
         Browser.Events.onKeyDown (Json.Decode.succeed HideInfo)
+
     else
         Sub.none
 
@@ -348,7 +349,7 @@ view model =
                 , E.padding (padding * 4)
                 ]
                 (E.el
-                    [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed (Noop, True))
+                    [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed ( Noop, True ))
                     , E.width fill
                     , E.height fill
                     , Background.color (Lib.setOpacity 0.9 Color.black)
