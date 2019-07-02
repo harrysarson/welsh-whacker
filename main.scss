@@ -6,8 +6,8 @@ html, body {
 .hiding, .hide, .showing, .show, {
     & > * {
         &:first-child, &:last-child > * {
-            transition-property: transform;
-            transition-duration: 0.4s;
+            // transition-property: transform;
+            // transition-duration: 0.4s;
         }
     }
 }

@@ -39,7 +39,7 @@ import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query
 
-changeDelay = 350
+changeDelay = 0
 
 main =
     Browser.application
