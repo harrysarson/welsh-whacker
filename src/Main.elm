@@ -295,9 +295,9 @@ view model =
                             []
                             (E.html
                                 (Svg.svg
-                                    [ Html.Attributes.style "transform" "translateY(0.1em)"
+                                    [ Html.Attributes.style "transform" "translateY(0.2em)"
                                     , Svg.Attributes.width "25"
-                                    , Svg.Attributes.height "100%"
+                                    -- , Svg.Attributes.height "100%"
                                     , Svg.Attributes.viewBox "0 0 512 512"
                                     ]
                                     [ Icons.magnifyingGlass ]
@@ -574,7 +574,7 @@ view model =
                                         (Svg.svg
                                             [ Html.Attributes.style "margin" "0 auto"
                                             , Svg.Attributes.width "15em"
-                                            , Svg.Attributes.height "100%"
+                                            -- , Svg.Attributes.height "100%"
                                             , Svg.Attributes.viewBox "0 0 1000 1000"
                                             ]
                                             [ Icons.welshDragon ]
