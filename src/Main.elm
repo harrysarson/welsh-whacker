@@ -50,7 +50,47 @@ type alias ViewportSize =
     }
 
 
-main : Lib.InitApp.Program () Model ViewportSize Msg
+type alias Flags =
+    { aberaeron : String
+    , aberdyfi : String
+    , abergavenny : String
+    , aberystwyth : String
+    , bala : String
+    , betwsyCoed : String
+    , blaenauFfestiniog : String
+    , blaenavon : String
+    , bodelwyddanCastle : String
+    , caernarfon : String
+    , cardiff : String
+    , criccieth : String
+    , denbigh : String
+    , dolgellau : String
+    , kidwelly : String
+    , lampeter : String
+    , laugharne : String
+    , llandovery : String
+    , llandudno : String
+    , llandysul : String
+    , llanfairpwll : String
+    , llangefni : String
+    , llanwrst : String
+    , manorbier : String
+    , merthyrTydfil : String
+    , nefyn : String
+    , newport : String
+    , pistyllRhaeadr : String
+    , portmeirion : String
+    , prestatyn : String
+    , pwllheli : String
+    , rhossili : String
+    , rhyl : String
+    , swansea : String
+    , tywyn : String
+    , ysbytyCynfyn : String
+    }
+
+
+main : Lib.InitApp.Program Flags Model ViewportSize Msg
 main =
     Lib.InitApp.application
         { firstInit = firstInit
@@ -74,11 +114,11 @@ subscriptions model =
 
 
 firstInit :
-    ()
+    Flags
     -> Url.Url
     -> Browser.Navigation.Key
     -> Cmd ViewportSize
-firstInit () _ _ =
+firstInit _ _ _ =
     Browser.Dom.getViewport
         |> Task.map
             (\{ viewport } ->
@@ -89,8 +129,8 @@ firstInit () _ _ =
         |> Task.perform identity
 
 
-secondInit : () -> Url.Url -> Browser.Navigation.Key -> ViewportSize -> ( Model, Cmd Msg )
-secondInit () url key viewport =
+secondInit : Flags -> Url.Url -> Browser.Navigation.Key -> ViewportSize -> ( Model, Cmd Msg )
+secondInit flags url key viewport =
     let
         urlThing =
             Url.Parser.parse
@@ -115,6 +155,7 @@ secondInit () url key viewport =
       , key = key
       , showInfo = False
       , viewport = viewport
+      , imageUrls = flags
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
@@ -151,6 +192,7 @@ type alias Model =
     , key : Browser.Navigation.Key
     , showInfo : Bool
     , viewport : ViewportSize
+    , imageUrls : Flags
     }
 
 
@@ -254,7 +296,7 @@ update msg model =
             )
 
         UrlChange url ->
-            secondInit () url model.key model.viewport
+            secondInit model.imageUrls url model.key model.viewport
 
         Noop ->
             ( model, Cmd.none )
@@ -266,13 +308,14 @@ view model =
         town =
             case model.place of
                 FoundPlace ( _, place ) ->
-                    Just (Content.WelshPlaces.getInfo place)
+                    Just (Content.WelshPlaces.getInfo place, place)
 
                 AboutToSearch ( _, place ) ->
-                    Just (Content.WelshPlaces.getInfo place)
+                    Just (Content.WelshPlaces.getInfo place, place)
 
                 _ ->
                     Nothing
+
 
         -- straddledBox =
         --     case town of
@@ -543,7 +586,7 @@ view model =
                             ]
                             (case town of
                                 Just t ->
-                                    E.text t.name
+                                    E.text (Tuple.first t).name
 
                                 Nothing ->
                                     E.html <|
@@ -581,14 +624,14 @@ view model =
                                             , E.centerX
                                             ]
                                             { description = ""
-                                            , src = "https://via.placeholder.com/150"
+                                            , src = getImageUrl (Tuple.second town_) model.imageUrls
                                             }
                                     , Just <|
                                         E.paragraph
                                             [ E.htmlAttribute (Html.Attributes.style "width" "25em")
                                             , E.centerX
                                             ]
-                                            [ E.text town_.blurb
+                                            [ E.text (Tuple.first town_).blurb
                                             ]
                                     , Just <|
                                         E.row
@@ -653,3 +696,25 @@ search str =
 
         Nothing ->
             Searching
+
+
+getImageUrl : Content.WelshPlaces.Place -> Flags -> String
+getImageUrl place imageUrls =
+    case place of
+        Content.WelshPlaces.Llandovery -> imageUrls.llandovery
+        Content.WelshPlaces.Aberaeron -> imageUrls.aberaeron
+        Content.WelshPlaces.Aberystwyth -> imageUrls.aberystwyth
+        Content.WelshPlaces.Llandudno -> imageUrls.llandudno
+        Content.WelshPlaces.Rhyl -> imageUrls.rhyl
+        Content.WelshPlaces.Bala -> imageUrls.bala
+        Content.WelshPlaces.BetwsyCoed -> imageUrls.betwsyCoed
+        Content.WelshPlaces.Caernarfon -> imageUrls.caernarfon
+        Content.WelshPlaces.Pwllheli -> imageUrls.pwllheli
+        Content.WelshPlaces.Tywyn -> imageUrls.tywyn
+        Content.WelshPlaces.MerthyrTydfil -> imageUrls.merthyrTydfil
+        Content.WelshPlaces.Abergavenny -> imageUrls.abergavenny
+        Content.WelshPlaces.Manorbier -> imageUrls.manorbier
+        Content.WelshPlaces.PistyllRhaeadr -> imageUrls.pistyllRhaeadr
+        Content.WelshPlaces.Portmeirion -> imageUrls.portmeirion
+        Content.WelshPlaces.Rhossili -> imageUrls.rhossili
+        Content.WelshPlaces.YsbytyCynfyn -> imageUrls.ysbytyCynfyn

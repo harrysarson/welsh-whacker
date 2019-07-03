@@ -38,8 +38,12 @@ update :
     -> ( Model flags model, Cmd (Msg firstMsg msg) )
 update mainUpdate secondInit message mdl =
     let
-        crash =
-            update mainUpdate secondInit message mdl
+        crash _ =
+            let
+                _ = Debug.log "invalid message" message
+                _ = Debug.log "invalid mdl" mdl
+            in
+            Debug.todo "invalid state" -- update mainUpdate secondInit message mdl
     in
     case mdl of
         Initialising f u k ->
@@ -50,15 +54,15 @@ update mainUpdate secondInit message mdl =
                         |> Tuple.mapSecond (Cmd.map MainMsg)
 
                 MainMsg _ ->
-                    crash
+                    crash ()
 
                 Dummy ->
-                    crash
+                    crash ()
 
         Ready mainModel ->
             case message of
                 Initialised _ ->
-                    crash
+                    crash ()
 
                 MainMsg mainMsg ->
                     mainUpdate mainMsg mainModel
@@ -66,7 +70,7 @@ update mainUpdate secondInit message mdl =
                         |> Tuple.mapSecond (Cmd.map MainMsg)
 
                 Dummy ->
-                    crash
+                    crash ()
 
 
 view :
