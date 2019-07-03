@@ -1,17 +1,23 @@
 
+$animate: false;
+
 html, body {
-    overflow: hidden;
+    @if $animate {
+        overflow: hidden;
+    }
     height: 100%;
 }
 
-// .hiding, .hide, .showing, .show, {
-//     & > * {
-//         &:first-child, &:last-child > * {
-//             transition-property: transform;
-//             transition-duration: 0.4s;
-//         }
-//     }
-// }
+.hiding, .hide, .showing, .show {
+    & > * {
+        &:first-child, &:last-child > * {
+            @if $animate {
+                transition-property: transform;
+                transition-duration: 0.4s;
+            }
+        }
+    }
+}
 
 .showing, .hiding {
     & > *:first-child {

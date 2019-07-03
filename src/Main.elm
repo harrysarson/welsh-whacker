@@ -45,8 +45,8 @@ changeDelay =
 
 
 type alias ViewportSize =
-    { width : Float
-    , height : Float
+    { width : Int
+    , height : Int
     }
 
 
@@ -106,11 +106,14 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.showInfo then
-        Browser.Events.onKeyDown (Json.Decode.succeed HideInfo)
+    Sub.batch
+        [ if model.showInfo then
+            Browser.Events.onKeyDown (Json.Decode.succeed HideInfo)
 
-    else
-        Sub.none
+          else
+            Sub.none
+        , Browser.Events.onResize Resize
+        ]
 
 
 firstInit :
@@ -120,12 +123,7 @@ firstInit :
     -> Cmd ViewportSize
 firstInit _ _ _ =
     Browser.Dom.getViewport
-        |> Task.map
-            (\{ viewport } ->
-                { width = viewport.width
-                , height = viewport.height
-                }
-            )
+        |> Task.map extractViewport
         |> Task.perform identity
 
 
@@ -206,6 +204,7 @@ type Msg
     | GoToInput
     | ShowInfo
     | HideInfo
+    | Resize Int Int
     | Noop
 
 
@@ -298,6 +297,16 @@ update msg model =
         UrlChange url ->
             secondInit model.imageUrls url model.key model.viewport
 
+        Resize width height ->
+            ( { model
+                | viewport =
+                    { width = width
+                    , height = height
+                    }
+              }
+            , Cmd.none
+            )
+
         Noop ->
             ( model, Cmd.none )
 
@@ -347,7 +356,7 @@ view model =
                 ]
                 [ Input.text
                     [ E.htmlAttribute <| Html.Attributes.id "wales-place-input"
-                    , E.htmlAttribute <| Html.Attributes.style "width" "20em"
+                    , E.htmlAttribute <| Html.Attributes.style "width" (px (baseSize * 20))
                     , Background.color (E.rgba 0 0 0 0)
                     , E.padding 5
                     , Border.color Color.transparent
@@ -525,10 +534,60 @@ view model =
                 )
 
         padding =
-            25
+            case (E.classifyDevice model.viewport).class of
+                E.Phone ->
+                    25
+
+                E.Tablet ->
+                    25
+
+                E.Desktop ->
+                    25
+
+                E.BigDesktop ->
+                    25
+
+        baseSize =
+            case (E.classifyDevice model.viewport).class of
+                E.Phone ->
+                    8
+
+                E.Tablet ->
+                    16
+
+                E.Desktop ->
+                    16
+
+                E.BigDesktop ->
+                    16
 
         fontBase =
-            16
+            case (E.classifyDevice model.viewport).class of
+                E.Phone ->
+                    12
+
+                E.Tablet ->
+                    16
+
+                E.Desktop ->
+                    16
+
+                E.BigDesktop ->
+                    16
+
+        blurbFontSize =
+            case (E.classifyDevice model.viewport).class of
+                E.Phone ->
+                    12
+
+                E.Tablet ->
+                    12
+
+                E.Desktop ->
+                    16
+
+                E.BigDesktop ->
+                    16
 
         body =
             E.layout
@@ -590,7 +649,7 @@ view model =
                                 Nothing ->
                                     E.html <|
                                         Svg.svg
-                                            (Tuple.first Icons.theWelshWhacker <| { width = "20em" })
+                                            (Tuple.first Icons.theWelshWhacker <| { width = px (fontBase * 20) })
                                             (Tuple.second Icons.theWelshWhacker)
                             )
                         )
@@ -618,7 +677,7 @@ view model =
                                     [ Just <|
                                         E.image
                                             [ E.htmlAttribute (Html.Attributes.class "town-image")
-                                            , E.width (E.px <| padding * 16)
+                                            , E.width (E.px <| baseSize * 24)
                                             , E.height (E.shrink |> E.minimum (padding * 4))
                                             , E.centerX
                                             ]
@@ -627,8 +686,9 @@ view model =
                                             }
                                     , Just <|
                                         E.paragraph
-                                            [ E.htmlAttribute (Html.Attributes.style "width" "25em")
+                                            [ E.htmlAttribute (Html.Attributes.style "width" (px (baseSize * 25)))
                                             , E.centerX
+                                            , Font.size blurbFontSize
                                             ]
                                             [ E.text (Tuple.first town_).blurb
                                             ]
@@ -642,7 +702,7 @@ view model =
                                                 ]
                                                 (E.html <|
                                                     Svg.svg
-                                                        (Tuple.first Icons.searchAgain <| { width = "7em" })
+                                                        (Tuple.first Icons.searchAgain <| { width = px (baseSize * 7) })
                                                         (Tuple.second Icons.searchAgain)
                                                 )
                                             , E.el
@@ -653,7 +713,7 @@ view model =
                                                 ]
                                                 (E.html <|
                                                     Svg.svg
-                                                        (Tuple.first Icons.information <| { width = "3em" })
+                                                        (Tuple.first Icons.information <| { width = px (baseSize * 3) })
                                                         (Tuple.second Icons.information)
                                                 )
                                             ]
@@ -662,7 +722,7 @@ view model =
                             Nothing ->
                                 [ inputBox
                                 , E.paragraph
-                                    [ E.htmlAttribute (Html.Attributes.style "width" "25em")
+                                    [ E.htmlAttribute (Html.Attributes.style "width" (px (baseSize * 25)))
                                     , E.centerX
                                     ]
                                     [ E.text "Whack your keyboard a couple of times and we will tell you where in Wales you are looking for!"
@@ -673,7 +733,7 @@ view model =
                                         [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
                                         (E.html
                                             (Svg.svg
-                                                (Tuple.first Icons.welshDragon <| { width = "15em" })
+                                                (Tuple.first Icons.welshDragon <| { width = px (fontBase * 15) })
                                                 (Tuple.second Icons.welshDragon)
                                             )
                                         )
@@ -687,6 +747,13 @@ view model =
     }
 
 
+extractViewport : Browser.Dom.Viewport -> ViewportSize
+extractViewport { viewport } =
+    { width = round viewport.width
+    , height = round viewport.height
+    }
+
+
 search : String -> PlaceResult
 search str =
     case Lib.waleSearch str |> List.head of
@@ -695,6 +762,11 @@ search str =
 
         Nothing ->
             Searching
+
+
+px : Int -> String
+px value =
+    String.fromInt value ++ "px"
 
 
 getImageUrl : Content.WelshPlaces.Place -> Flags -> String
