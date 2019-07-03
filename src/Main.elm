@@ -308,14 +308,13 @@ view model =
         town =
             case model.place of
                 FoundPlace ( _, place ) ->
-                    Just (Content.WelshPlaces.getInfo place, place)
+                    Just ( Content.WelshPlaces.getInfo place, place )
 
                 AboutToSearch ( _, place ) ->
-                    Just (Content.WelshPlaces.getInfo place, place)
+                    Just ( Content.WelshPlaces.getInfo place, place )
 
                 _ ->
                     Nothing
-
 
         -- straddledBox =
         --     case town of
@@ -701,20 +700,53 @@ search str =
 getImageUrl : Content.WelshPlaces.Place -> Flags -> String
 getImageUrl place imageUrls =
     case place of
-        Content.WelshPlaces.Llandovery -> imageUrls.llandovery
-        Content.WelshPlaces.Aberaeron -> imageUrls.aberaeron
-        Content.WelshPlaces.Aberystwyth -> imageUrls.aberystwyth
-        Content.WelshPlaces.Llandudno -> imageUrls.llandudno
-        Content.WelshPlaces.Rhyl -> imageUrls.rhyl
-        Content.WelshPlaces.Bala -> imageUrls.bala
-        Content.WelshPlaces.BetwsyCoed -> imageUrls.betwsyCoed
-        Content.WelshPlaces.Caernarfon -> imageUrls.caernarfon
-        Content.WelshPlaces.Pwllheli -> imageUrls.pwllheli
-        Content.WelshPlaces.Tywyn -> imageUrls.tywyn
-        Content.WelshPlaces.MerthyrTydfil -> imageUrls.merthyrTydfil
-        Content.WelshPlaces.Abergavenny -> imageUrls.abergavenny
-        Content.WelshPlaces.Manorbier -> imageUrls.manorbier
-        Content.WelshPlaces.PistyllRhaeadr -> imageUrls.pistyllRhaeadr
-        Content.WelshPlaces.Portmeirion -> imageUrls.portmeirion
-        Content.WelshPlaces.Rhossili -> imageUrls.rhossili
-        Content.WelshPlaces.YsbytyCynfyn -> imageUrls.ysbytyCynfyn
+        Content.WelshPlaces.Llandovery ->
+            imageUrls.llandovery
+
+        Content.WelshPlaces.Aberaeron ->
+            imageUrls.aberaeron
+
+        Content.WelshPlaces.Aberystwyth ->
+            imageUrls.aberystwyth
+
+        Content.WelshPlaces.Llandudno ->
+            imageUrls.llandudno
+
+        Content.WelshPlaces.Rhyl ->
+            imageUrls.rhyl
+
+        Content.WelshPlaces.Bala ->
+            imageUrls.bala
+
+        Content.WelshPlaces.BetwsyCoed ->
+            imageUrls.betwsyCoed
+
+        Content.WelshPlaces.Caernarfon ->
+            imageUrls.caernarfon
+
+        Content.WelshPlaces.Pwllheli ->
+            imageUrls.pwllheli
+
+        Content.WelshPlaces.Tywyn ->
+            imageUrls.tywyn
+
+        Content.WelshPlaces.MerthyrTydfil ->
+            imageUrls.merthyrTydfil
+
+        Content.WelshPlaces.Abergavenny ->
+            imageUrls.abergavenny
+
+        Content.WelshPlaces.Manorbier ->
+            imageUrls.manorbier
+
+        Content.WelshPlaces.PistyllRhaeadr ->
+            imageUrls.pistyllRhaeadr
+
+        Content.WelshPlaces.Portmeirion ->
+            imageUrls.portmeirion
+
+        Content.WelshPlaces.Rhossili ->
+            imageUrls.rhossili
+
+        Content.WelshPlaces.YsbytyCynfyn ->
+            imageUrls.ysbytyCynfyn

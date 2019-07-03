@@ -39,11 +39,11 @@ update :
 update mainUpdate secondInit message mdl =
     let
         crash _ =
-            let
-                _ = Debug.log "invalid message" message
-                _ = Debug.log "invalid mdl" mdl
-            in
-            Debug.todo "invalid state" -- update mainUpdate secondInit message mdl
+            -- let
+            --     _ = Debug.log "invalid message" message
+            --     _ = Debug.log "invalid mdl" mdl
+            -- in
+            update mainUpdate secondInit message mdl
     in
     case mdl of
         Initialising f u k ->
