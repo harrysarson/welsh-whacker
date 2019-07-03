@@ -618,7 +618,7 @@ view model =
                                     [ Just <|
                                         E.image
                                             [ E.htmlAttribute (Html.Attributes.class "town-image")
-                                            , E.width (E.px <| padding * 8)
+                                            , E.width (E.px <| padding * 16)
                                             , E.height (E.shrink |> E.minimum (padding * 4))
                                             , E.centerX
                                             ]
