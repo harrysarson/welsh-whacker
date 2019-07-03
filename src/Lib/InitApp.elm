@@ -6,8 +6,8 @@ import Html
 import Url exposing (Url)
 
 
-type Model flags model
-    = Initialising flags Url Key
+type Model flags model msg
+    = Initialising flags Url Key (List msg)
     | Ready model
 
 
@@ -21,9 +21,9 @@ init :
     -> flags
     -> Url
     -> Key
-    -> ( Model flags model, Cmd (Msg firstMsg x) )
+    -> ( Model flags model msg, Cmd (Msg firstMsg x) )
 init initFunc f url key =
-    ( Initialising f url key
+    ( Initialising f url key []
     , initFunc f url key
         |> Cmd.map Initialise
     )
@@ -32,7 +32,7 @@ specificUpdate :
             (msg -> model -> ( model, Cmd msg ))
             -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
             -> Msg firstMsg msg
-            -> Model flags model
+            -> Model flags model msg
             -> ( model, Cmd msg )
 specificUpdate mainUpdate secondInit message mdl =
     let
@@ -40,12 +40,20 @@ specificUpdate mainUpdate secondInit message mdl =
             specificUpdate mainUpdate secondInit message mdl
     in
     case mdl of
-        Initialising f u k ->
+        Initialising f u k mailbox ->
             case message of
                 Initialise firstMessage ->
-                    secondInit f u k firstMessage
+                    List.foldl
+                        (\nextMessage (model, cmd) ->
+                            let
+                                (newModel, newCmd) = mainUpdate nextMessage model
+                            in
+                                (newModel, Cmd.batch [cmd, newCmd])
+                        )
+                        (secondInit f u k firstMessage)
+                        mailbox
 
-                MainMsg _ ->
+                MainMsg mainMsg ->
                     crash ()
 
         Ready mainModel ->
@@ -60,19 +68,51 @@ update :
     (msg -> model -> ( model, Cmd msg ))
     -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
     -> Msg firstMsg msg
-    -> Model flags model
-    -> ( Model flags model, Cmd (Msg firstMsg msg) )
+    -> Model flags model msg
+    -> ( Model flags model msg, Cmd (Msg firstMsg msg) )
 update mainUpdate secondInit message mdl =
-    specificUpdate mainUpdate secondInit message mdl
-        |> Tuple.mapFirst Ready
-        |> Tuple.mapSecond (Cmd.map MainMsg)
+    let
+        crash () =
+            update mainUpdate secondInit message mdl
+    in
+    case mdl of
+        Initialising f u k mailbox ->
+            case message of
+                Initialise firstMessage ->
+                    List.foldl
+                        (\nextMessage (model, cmd) ->
+                            let
+                                (newModel, newCmd) = mainUpdate nextMessage model
+                            in
+                                (newModel, Cmd.batch [cmd, newCmd])
+                        )
+                        (secondInit f u k firstMessage)
+                        mailbox
+
+                        |> Tuple.mapFirst Ready
+                        |> Tuple.mapSecond (Cmd.map MainMsg)
+
+                MainMsg mainMsg ->
+                    ( Initialising f u k (mainMsg :: mailbox)
+                    , Cmd.none
+                    )
+
+        Ready mainModel ->
+            case message of
+                Initialise _ ->
+                    crash ()
+
+                MainMsg mainMsg ->
+                    mainUpdate mainMsg mainModel
+                        |> Tuple.mapFirst Ready
+                        |> Tuple.mapSecond (Cmd.map MainMsg)
 
 
 
 view :
     Document Never
     -> (model -> Document msg)
-    -> Model flags model
+    -> Model flags model msg
     -> Document (Msg x msg)
 view initView mainView mdl =
     case mdl of
@@ -87,7 +127,7 @@ view initView mainView mdl =
             , title = doc.title
             }
 
-        Initialising _ _ _ ->
+        Initialising _ _ _ _ ->
             let
                 doc =
                     initView
@@ -101,7 +141,7 @@ view initView mainView mdl =
 
 subscriptions :
     (model -> Sub msg)
-    -> Model flags model
+    -> Model flags model msg
     -> Sub (Msg x msg)
 subscriptions subscriptionsFunc mdl =
     case mdl of
@@ -109,12 +149,12 @@ subscriptions subscriptionsFunc mdl =
             subscriptionsFunc mainModel
                 |> Sub.map MainMsg
 
-        Initialising _ _ _ ->
+        Initialising _ _ _ _ ->
             Sub.none
 
 
 type alias Program flags model initMsg msg =
-    Platform.Program flags (Model flags model) (Msg initMsg msg)
+    Platform.Program flags (Model flags model msg) (Msg initMsg msg)
 
 
 application :
