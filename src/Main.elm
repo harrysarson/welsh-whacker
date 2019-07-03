@@ -17,7 +17,6 @@ import Browser.Navigation
 import Content.WelshPlaces
 import Design.Color as Color
 import Design.Icons as Icons
-import Dict
 import Element as E exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -25,28 +24,41 @@ import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Html
 import Html.Attributes
 import Html.Events
 import Json.Decode
 import Lib
+import Lib.InitApp
 import Process
 import Svg
 import Svg.Attributes
 import Task
 import Url
 import Url.Builder
-import Url.Parser exposing ((</>), (<?>))
+import Url.Parser exposing ((<?>))
 import Url.Parser.Query
 
-changeDelay = 0
 
+changeDelay : Float
+changeDelay =
+    0
+
+
+type alias ViewportSize =
+    { width : Float
+    , height : Float
+    }
+
+
+main : Lib.InitApp.Program () Model ViewportSize Msg
 main =
-    Browser.application
-        { init = init
+    Lib.InitApp.application
+        { firstInit = firstInit
+        , secondInit = secondInit
         , onUrlRequest = ClickedLink
         , onUrlChange = UrlChange
-        , view = view
+        , mainView = view
+        , initView = { body = [], title = "" }
         , subscriptions = subscriptions
         , update = update
         }
@@ -61,8 +73,24 @@ subscriptions model =
         Sub.none
 
 
-init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init () url key =
+firstInit :
+    ()
+    -> Url.Url
+    -> Browser.Navigation.Key
+    -> Cmd ViewportSize
+firstInit () _ _ =
+    Browser.Dom.getViewport
+        |> Task.map
+            (\{ viewport } ->
+                { width = viewport.width
+                , height = viewport.height
+                }
+            )
+        |> Task.perform identity
+
+
+secondInit : () -> Url.Url -> Browser.Navigation.Key -> ViewportSize -> ( Model, Cmd Msg )
+secondInit () url key viewport =
     let
         urlThing =
             Url.Parser.parse
@@ -86,6 +114,7 @@ init () url key =
                     Searching
       , key = key
       , showInfo = False
+      , viewport = viewport
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
@@ -121,6 +150,7 @@ type alias Model =
     , place : PlaceResult
     , key : Browser.Navigation.Key
     , showInfo : Bool
+    , viewport : ViewportSize
     }
 
 
@@ -153,7 +183,7 @@ update msg model =
 
         ClickedLink urlRequest ->
             case urlRequest of
-                Browser.Internal url ->
+                Browser.Internal _ ->
                     ( model
                     , Cmd.none
                     )
@@ -169,18 +199,19 @@ update msg model =
                     ( { model | place = AboutToSearch p }
                     , Task.perform (\() -> GoToInput) (Process.sleep changeDelay)
                     )
+
                 _ ->
                     ( model, Cmd.none )
 
         GoToInput ->
-            case Debug.log "place" model.place of
+            case model.place of
                 AboutToSearch _ ->
-                    ({ model | place = Searching }
+                    ( { model | place = Searching }
                     , Browser.Navigation.back model.key 1
                     )
 
                 _ ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
 
         DoSearch ->
             case model.place of
@@ -223,16 +254,10 @@ update msg model =
             )
 
         UrlChange url ->
-            init () url model.key
+            secondInit () url model.key model.viewport
 
         Noop ->
             ( model, Cmd.none )
-
-
-type ShowClass
-    = Show
-    | Hide
-    | Hiding
 
 
 view : Model -> Browser.Document Msg
@@ -243,7 +268,7 @@ view model =
                 FoundPlace ( _, place ) ->
                     Just (Content.WelshPlaces.getInfo place)
 
-                AboutToSearch (_, place) ->
+                AboutToSearch ( _, place ) ->
                     Just (Content.WelshPlaces.getInfo place)
 
                 _ ->
@@ -466,10 +491,12 @@ view model =
         body =
             E.layout
                 ([ Just (Font.size fontBase)
-                 , Just (Font.family
-                    [ Font.typeface "Verdana"
-                    , Font.sansSerif
-                    ])
+                 , Just
+                    (Font.family
+                        [ Font.typeface "Verdana"
+                        , Font.sansSerif
+                        ]
+                    )
                  , if model.showInfo then
                     Just (E.inFront infoBox)
 
@@ -485,12 +512,12 @@ view model =
                     , E.centerX
                     , E.htmlAttribute <|
                         Html.Attributes.class
-                            (Debug.log "showing" <| case model.place of
+                            (case model.place of
                                 Searching ->
                                     "show"
 
                                 AboutToSearch _ ->
-                                     "showing"
+                                    "showing"
 
                                 FoundPlace _ ->
                                     "hide"
