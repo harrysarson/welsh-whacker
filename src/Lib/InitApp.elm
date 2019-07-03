@@ -29,7 +29,6 @@ init initFunc f url key =
     )
 
 
-
 update :
     (msg -> model -> ( model, Cmd msg ))
     -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
