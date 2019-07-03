@@ -12,9 +12,8 @@ type Model flags model
 
 
 type Msg firstMsg msg
-    = Initialised firstMsg
+    = Initialise firstMsg
     | MainMsg msg
-    | Dummy
 
 
 init :
@@ -26,9 +25,36 @@ init :
 init initFunc f url key =
     ( Initialising f url key
     , initFunc f url key
-        |> Cmd.map Initialised
+        |> Cmd.map Initialise
     )
 
+specificUpdate :
+            (msg -> model -> ( model, Cmd msg ))
+            -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
+            -> Msg firstMsg msg
+            -> Model flags model
+            -> ( model, Cmd msg )
+specificUpdate mainUpdate secondInit message mdl =
+    let
+        crash () =
+            specificUpdate mainUpdate secondInit message mdl
+    in
+    case mdl of
+        Initialising f u k ->
+            case message of
+                Initialise firstMessage ->
+                    secondInit f u k firstMessage
+
+                MainMsg _ ->
+                    crash ()
+
+        Ready mainModel ->
+            case message of
+                Initialise _ ->
+                    crash ()
+
+                MainMsg mainMsg ->
+                    mainUpdate mainMsg mainModel
 
 update :
     (msg -> model -> ( model, Cmd msg ))
@@ -37,40 +63,10 @@ update :
     -> Model flags model
     -> ( Model flags model, Cmd (Msg firstMsg msg) )
 update mainUpdate secondInit message mdl =
-    let
-        crash _ =
-            -- let
-            --     _ = Debug.log "invalid message" message
-            --     _ = Debug.log "invalid mdl" mdl
-            -- in
-            update mainUpdate secondInit message mdl
-    in
-    case mdl of
-        Initialising f u k ->
-            case message of
-                Initialised firstMessage ->
-                    secondInit f u k firstMessage
-                        |> Tuple.mapFirst Ready
-                        |> Tuple.mapSecond (Cmd.map MainMsg)
+    specificUpdate mainUpdate secondInit message mdl
+        |> Tuple.mapFirst Ready
+        |> Tuple.mapSecond (Cmd.map MainMsg)
 
-                MainMsg _ ->
-                    crash ()
-
-                Dummy ->
-                    crash ()
-
-        Ready mainModel ->
-            case message of
-                Initialised _ ->
-                    crash ()
-
-                MainMsg mainMsg ->
-                    mainUpdate mainMsg mainModel
-                        |> Tuple.mapFirst Ready
-                        |> Tuple.mapSecond (Cmd.map MainMsg)
-
-                Dummy ->
-                    crash ()
 
 
 view :
@@ -98,7 +94,7 @@ view initView mainView mdl =
             in
             { body =
                 doc.body
-                    |> List.map (Html.map (\_ -> Dummy))
+                    |> List.map (Html.map never)
             , title = doc.title
             }
 
