@@ -443,6 +443,16 @@ view model =
                                 }
                             , E.text "."
                             ]
+                        , E.paragraph
+                            [ E.spacing lineSpacing ]
+                            [ E.text "I am grateful to level "
+                            , E.link
+                                [ Font.color Color.grey ]
+                                { url = "https://level.app/svg-to-elm"
+                                , label = E.text "for their svg-to-elm tool"
+                                }
+                            , E.text "."
+                            ]
                         ]
                     )
                 )
@@ -456,6 +466,10 @@ view model =
         body =
             E.layout
                 ([ Just (Font.size fontBase)
+                 , Just (Font.family
+                    [ Font.typeface "Verdana"
+                    , Font.sansSerif
+                    ])
                  , if model.showInfo then
                     Just (E.inFront infoBox)
 
