@@ -56,7 +56,7 @@ setOpacity alpha color =
 
 
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
-approxSearch word maxCost (Trie maybeValue children) =
+approxSearch word maxCost (Trie _ children) =
     let
         currentRow =
             construct 0 (List.range 1 (String.length word))
@@ -116,9 +116,6 @@ approxSearchFolder word currentRow maxCost initial =
 approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> ApproxSearchHelpResult a
 approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
     let
-        columns =
-            String.length word
-
         getCurrentRow row previous word_ =
             -- let
             --     -- _ = Debug.log "prev" previous

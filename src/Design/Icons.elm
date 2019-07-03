@@ -4,6 +4,7 @@ import Svg exposing (..)
 import Svg.Attributes as Attr exposing (..)
 
 
+magnifyingGlass : Svg.Svg x
 magnifyingGlass =
     g
         []

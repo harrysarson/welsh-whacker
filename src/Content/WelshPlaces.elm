@@ -1,6 +1,5 @@
 module Content.WelshPlaces exposing (Info, Place(..), getInfo, infoLookup)
 
-import Dict exposing (Dict)
 import Lib.Trie as Trie
 
 
