@@ -705,7 +705,7 @@ searchAgain =
         , x """0px"""
         , y """0px"""
         , width options.width
-        , viewBox """0 90 595.3 300"""
+        , viewBox """120 120 350 240"""
         ]
     , [ Svg.style
             []

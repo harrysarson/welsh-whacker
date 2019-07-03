@@ -425,13 +425,13 @@ view model =
         infoBox =
             let
                 lineSpacing =
-                    padding // 3 + 1
+                    baseSize // 2 + 1
             in
             E.el
                 [ Events.onClick HideInfo
                 , E.width fill
                 , E.height fill
-                , E.padding (padding * 4)
+                , E.padding (baseSize * 6)
                 ]
                 (E.el
                     [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed ( Noop, True ))
@@ -439,14 +439,16 @@ view model =
                     , E.height fill
                     , Background.color (Lib.setOpacity 0.9 Color.black)
                     , Border.color Color.red
-                    , Border.width (padding // 5 + 1)
+                    , Border.width (baseSize // 3 + 1)
                     , Border.solid
                     , Font.color Color.white
                     , E.padding padding
                     ]
                     (E.textColumn
-                        [ E.spacing padding
+                        [ E.spacing (baseSize * 3 // 2)
                         , Font.size (fontBase * 5 // 4)
+                        , E.width fill
+                        , E.height fill
                         ]
                         [ E.paragraph
                             [ E.spacing lineSpacing ]
@@ -553,7 +555,7 @@ view model =
                     8
 
                 E.Tablet ->
-                    16
+                    12
 
                 E.Desktop ->
                     16
@@ -564,24 +566,10 @@ view model =
         fontBase =
             case (E.classifyDevice model.viewport).class of
                 E.Phone ->
-                    12
+                    14
 
                 E.Tablet ->
                     16
-
-                E.Desktop ->
-                    16
-
-                E.BigDesktop ->
-                    16
-
-        blurbFontSize =
-            case (E.classifyDevice model.viewport).class of
-                E.Phone ->
-                    12
-
-                E.Tablet ->
-                    12
 
                 E.Desktop ->
                     16
@@ -627,19 +615,29 @@ view model =
                                     "hiding"
                             )
                     ]
-                    [ E.el
+                    [ let
+                        paddingBelowTitle =
+                            padding * 3
+
+                        titleFontSize =
+                            fontBase * 2
+                      in
+                      E.el
                         [ E.width E.fill
-                        , E.height (E.px 0)
-                        , E.height (E.fillPortion 3)
-                        , E.htmlAttribute (Html.Attributes.style "flex-basis" "0")
+                        , E.height (E.px (max (baseSize * 9) (paddingBelowTitle * 4 // 3 + titleFontSize)))
                         ]
                         (E.el
                             [ Region.heading 1
                             , alignLeft
-                            , Font.size (fontBase * 2)
+                            , Font.size titleFontSize
                             , E.centerX
                             , E.alignBottom
-                            , E.paddingXY 0 (padding * 3)
+                            , E.paddingEach
+                                { top = 0
+                                , left = 0
+                                , bottom = paddingBelowTitle
+                                , right = 0
+                                }
                             , Font.color Color.red
                             ]
                             (case town of
@@ -673,51 +671,53 @@ view model =
                         ]
                         (case town of
                             Just town_ ->
-                                List.filterMap identity
-                                    [ Just <|
-                                        E.image
-                                            [ E.htmlAttribute (Html.Attributes.class "town-image")
-                                            , E.width (E.px <| baseSize * 24)
-                                            , E.height (E.shrink |> E.minimum (padding * 4))
-                                            , E.centerX
-                                            ]
-                                            { description = ""
-                                            , src = getImageUrl (Tuple.second town_) model.imageUrls
-                                            }
-                                    , Just <|
-                                        E.paragraph
-                                            [ E.htmlAttribute (Html.Attributes.style "width" (px (baseSize * 25)))
-                                            , E.centerX
-                                            , Font.size blurbFontSize
-                                            ]
-                                            [ E.text (Tuple.first town_).blurb
-                                            ]
-                                    , Just <|
-                                        E.row
-                                            [ E.width E.fill ]
-                                            [ E.el
-                                                [ Events.onClick RequestInput
-                                                , E.pointer
-                                                , E.alignLeft
-                                                ]
-                                                (E.html <|
-                                                    Svg.svg
-                                                        (Tuple.first Icons.searchAgain <| { width = px (baseSize * 7) })
-                                                        (Tuple.second Icons.searchAgain)
-                                                )
-                                            , E.el
-                                                [ Events.onClick ShowInfo
-                                                , E.pointer
-                                                , E.alignRight
-                                                , E.padding padding
-                                                ]
-                                                (E.html <|
-                                                    Svg.svg
-                                                        (Tuple.first Icons.information <| { width = px (baseSize * 3) })
-                                                        (Tuple.second Icons.information)
-                                                )
-                                            ]
+                                [ E.image
+                                    [ E.htmlAttribute (Html.Attributes.class "town-image")
+                                    , E.width (E.px <| baseSize * 24)
+                                    , E.height (E.shrink |> E.minimum (padding * 4))
+                                    , E.centerX
                                     ]
+                                    { description = ""
+                                    , src = getImageUrl (Tuple.second town_) model.imageUrls
+                                    }
+                                , E.paragraph
+                                    [ E.htmlAttribute (Html.Attributes.style "width" (px (baseSize * 25)))
+                                    , E.centerX
+                                    , Font.size fontBase
+                                    ]
+                                    [ E.text (Tuple.first town_).blurb
+                                    ]
+                                , E.row
+                                    [ E.width E.fill
+                                    , E.height E.fill
+                                    , E.alignBottom
+                                    ]
+                                    [ E.el
+                                        [ Events.onClick RequestInput
+                                        , E.pointer
+                                        , E.alignLeft
+                                        , E.alignBottom
+                                        , E.padding (padding * 2)
+                                        ]
+                                        (E.html <|
+                                            Svg.svg
+                                                (Tuple.first Icons.searchAgain <| { width = px (fontBase * 6) })
+                                                (Tuple.second Icons.searchAgain)
+                                        )
+                                    , E.el
+                                        [ Events.onClick ShowInfo
+                                        , E.pointer
+                                        , E.alignRight
+                                        , E.alignBottom
+                                        , E.padding (padding * 2)
+                                        ]
+                                        (E.html <|
+                                            Svg.svg
+                                                (Tuple.first Icons.information <| { width = px (fontBase * 3) })
+                                                (Tuple.second Icons.information)
+                                        )
+                                    ]
+                                ]
 
                             Nothing ->
                                 [ inputBox
