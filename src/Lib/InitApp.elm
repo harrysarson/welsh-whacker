@@ -28,41 +28,7 @@ init initFunc f url key =
         |> Cmd.map Initialise
     )
 
-specificUpdate :
-            (msg -> model -> ( model, Cmd msg ))
-            -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
-            -> Msg firstMsg msg
-            -> Model flags model msg
-            -> ( model, Cmd msg )
-specificUpdate mainUpdate secondInit message mdl =
-    let
-        crash () =
-            specificUpdate mainUpdate secondInit message mdl
-    in
-    case mdl of
-        Initialising f u k mailbox ->
-            case message of
-                Initialise firstMessage ->
-                    List.foldl
-                        (\nextMessage (model, cmd) ->
-                            let
-                                (newModel, newCmd) = mainUpdate nextMessage model
-                            in
-                                (newModel, Cmd.batch [cmd, newCmd])
-                        )
-                        (secondInit f u k firstMessage)
-                        mailbox
 
-                MainMsg mainMsg ->
-                    crash ()
-
-        Ready mainModel ->
-            case message of
-                Initialise _ ->
-                    crash ()
-
-                MainMsg mainMsg ->
-                    mainUpdate mainMsg mainModel
 
 update :
     (msg -> model -> ( model, Cmd msg ))
@@ -75,38 +41,37 @@ update mainUpdate secondInit message mdl =
         crash () =
             update mainUpdate secondInit message mdl
     in
-    case mdl of
-        Initialising f u k mailbox ->
-            case message of
-                Initialise firstMessage ->
+    case message of
+        Initialise firstMessage ->
+            case mdl of
+                Initialising f u k mailbox ->
                     List.foldl
-                        (\nextMessage (model, cmd) ->
+                        (\nextMessage ( model, cmd ) ->
                             let
-                                (newModel, newCmd) = mainUpdate nextMessage model
+                                ( newModel, newCmd ) =
+                                    mainUpdate nextMessage model
                             in
-                                (newModel, Cmd.batch [cmd, newCmd])
+                            ( newModel, Cmd.batch [ cmd, newCmd ] )
                         )
                         (secondInit f u k firstMessage)
                         mailbox
-
                         |> Tuple.mapFirst Ready
                         |> Tuple.mapSecond (Cmd.map MainMsg)
 
-                MainMsg mainMsg ->
+                Ready _ ->
+                    crash ()
+
+        MainMsg mainMsg ->
+            case mdl of
+                Initialising f u k mailbox ->
                     ( Initialising f u k (mainMsg :: mailbox)
                     , Cmd.none
                     )
 
-        Ready mainModel ->
-            case message of
-                Initialise _ ->
-                    crash ()
-
-                MainMsg mainMsg ->
+                Ready mainModel ->
                     mainUpdate mainMsg mainModel
                         |> Tuple.mapFirst Ready
                         |> Tuple.mapSecond (Cmd.map MainMsg)
-
 
 
 view :
