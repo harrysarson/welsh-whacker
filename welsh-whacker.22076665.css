@@ -1,2 +1,0 @@
-.hiding .input-box{animation:box-whack .8s;animation-fill-mode:both}.hiding>:first-child{transform:translateY(-500px)}.hiding>:first-child,.hiding>:last-child>*{transition-property:transform;transition-duration:.8s}.hiding>:last-child>*{transform:translateY(500px)}@keyframes box-whack{0%{opacity:1;transform:translateY(-50%) rotate(0)}50%{opacity:.9 rotate(1deg)}to{transform:translate(-150%,300%) rotate(90deg);opacity:0}}
-/*# sourceMappingURL=/welsh-whacker/welsh-whacker.22076665.css.map */
