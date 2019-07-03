@@ -432,6 +432,7 @@ view model =
                 , E.width fill
                 , E.height fill
                 , E.padding (baseSize * 6)
+                , Background.color (Lib.setOpacity 0.5 Color.black)
                 ]
                 (E.el
                     [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed ( Noop, True ))
@@ -446,7 +447,7 @@ view model =
                     ]
                     (E.textColumn
                         [ E.spacing (baseSize * 3 // 2)
-                        , Font.size (fontBase * 5 // 4)
+                        , Font.size fontBase
                         , E.width fill
                         , E.height fill
                         ]
@@ -455,15 +456,15 @@ view model =
                             [ E.text "The Welsh Whacker is a website build by Harry Sarson and Phillip Gull."
                             , E.text "The Welsh Whacker is written in "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://elm-lang.org"
                                 , label = E.text "elm"
                                 }
-                            , E.text " and the source code is available at "
+                            , E.text " and the source code is available on "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://github.com/harrysarson/welsh-whacker/"
-                                , label = E.text "github.com/harrysarson/welsh-whacker"
+                                , label = E.text "github"
                                 }
                             , E.text "."
                             ]
@@ -471,7 +472,7 @@ view model =
                             [ E.spacing lineSpacing ]
                             [ E.text "The list of Welsh town names were compiled with help from Paul Stenning's "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://www.paulstenning.com/uk-towns-and-counties-list"
                                 , label = E.text "\"UK Towns and Counties List\""
                                 }
@@ -481,19 +482,19 @@ view model =
                             [ E.spacing lineSpacing ]
                             [ E.text "The search icon is made by "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://www.freepik.com"
                                 , label = E.text "Freepik"
                                 }
                             , E.text " from "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://www.flaticon.com"
                                 , label = E.text "www.flaticon.com"
                                 }
                             , E.text " and is licensed by "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "http://creativecommons.org/licenses/by/3.0"
                                 , label = E.text "CC 3.0 BY"
                                 }
@@ -503,19 +504,19 @@ view model =
                             [ E.spacing lineSpacing ]
                             [ E.text "The information icon is made by "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://www.flaticon.com/authors/good-ware"
                                 , label = E.text "Good Ware"
                                 }
                             , E.text " from "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://www.flaticon.com"
                                 , label = E.text "www.flaticon.com"
                                 }
                             , E.text " and is licensed by "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "http://creativecommons.org/licenses/by/3.0"
                                 , label = E.text "CC 3.0 BY"
                                 }
@@ -525,7 +526,7 @@ view model =
                             [ E.spacing lineSpacing ]
                             [ E.text "I am grateful to level "
                             , E.link
-                                [ Font.color Color.grey ]
+                                [ Font.color Color.anchor ]
                                 { url = "https://level.app/svg-to-elm"
                                 , label = E.text "for their svg-to-elm tool"
                                 }

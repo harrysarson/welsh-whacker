@@ -1,4 +1,4 @@
-module Design.Color exposing (black, blue, darkBlue, green, grey, red, transparent, white)
+module Design.Color exposing (anchor, black, blue, darkBlue, green, grey, red, transparent, white)
 
 import Element
 
@@ -6,6 +6,11 @@ import Element
 white : Element.Color
 white =
     Element.rgb 1 1 1
+
+
+anchor : Element.Color
+anchor =
+    Element.rgb255 176 236 180
 
 
 grey : Element.Color
