@@ -248,7 +248,9 @@ update msg model =
             case model.place of
                 AboutToSearch _ ->
                     ( { model | place = Searching }
-                    , Browser.Navigation.back model.key 1
+                    , Browser.Navigation.pushUrl
+                        model.key
+                        (Url.Builder.relative [] [ Url.Builder.string "input" model.input ])
                     )
 
                 _ ->
