@@ -532,12 +532,17 @@ view model =
                                 }
                             , E.text "."
                             ]
+
+                        -- , E.text (Debug.toString model.viewport)
                         ]
                     )
                 )
 
+        deviceClass =
+            (E.classifyDevice model.viewport).class
+
         padding =
-            case (E.classifyDevice model.viewport).class of
+            case deviceClass of
                 E.Phone ->
                     25
 
@@ -551,9 +556,9 @@ view model =
                     25
 
         baseSize =
-            case (E.classifyDevice model.viewport).class of
+            case deviceClass of
                 E.Phone ->
-                    8
+                    12
 
                 E.Tablet ->
                     12
@@ -565,9 +570,9 @@ view model =
                     16
 
         fontBase =
-            case (E.classifyDevice model.viewport).class of
+            case deviceClass of
                 E.Phone ->
-                    14
+                    16
 
                 E.Tablet ->
                     16
@@ -682,7 +687,15 @@ view model =
                                     , src = getImageUrl (Tuple.second town_) model.imageUrls
                                     }
                                 , E.paragraph
-                                    [ E.htmlAttribute (Html.Attributes.style "width" (px (baseSize * 25)))
+                                    [ E.width
+                                        (case deviceClass of
+                                            E.Phone ->
+                                                E.fill
+
+                                            _ ->
+                                                E.px (baseSize * 25)
+                                        )
+                                    , E.paddingXY padding 0
                                     , E.centerX
                                     , Font.size fontBase
                                     ]
