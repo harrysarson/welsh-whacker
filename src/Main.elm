@@ -119,12 +119,11 @@ firstInit :
     Flags
     -> Url.Url
     -> Browser.Navigation.Key
-    -> ( Browser.Document Never, Cmd ViewportSize )
+    -> ( Browser.Document Never, Task.Task Never ViewportSize )
 firstInit _ _ _ =
     ( { body = [], title = "" }
     , Browser.Dom.getViewport
         |> Task.map extractViewport
-        |> Task.perform identity
     )
 
 

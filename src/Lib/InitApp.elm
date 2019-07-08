@@ -3,6 +3,7 @@ module Lib.InitApp exposing (Program, application)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation exposing (Key)
 import Html
+import Task exposing (Task)
 import Url exposing (Url)
 
 
@@ -17,7 +18,7 @@ type Msg firstMsg msg
 
 
 init :
-    (flags -> Url -> Key -> ( Document Never, Cmd firstMsg ))
+    (flags -> Url -> Key -> ( Document Never, Task Never firstMsg ))
     -> flags
     -> Url
     -> Key
@@ -28,7 +29,7 @@ init initFunc f url key =
             initFunc f url key
     in
     ( Initialising f url key [] initView
-    , Cmd.map Initialise initCmd
+    , Task.perform Initialise initCmd
     )
 
 
@@ -124,7 +125,7 @@ type alias Program flags model initMsg msg =
 
 
 application :
-    { firstInit : flags -> Url -> Key -> ( Document Never, Cmd initMsg )
+    { firstInit : flags -> Url -> Key -> ( Document Never, Task Never initMsg )
     , secondInit : flags -> Url -> Key -> initMsg -> ( model, Cmd msg )
     , mainView : model -> Document msg
     , update : msg -> model -> ( model, Cmd msg )
