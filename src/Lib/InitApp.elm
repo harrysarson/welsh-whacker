@@ -7,7 +7,7 @@ import Url exposing (Url)
 
 
 type Model flags model msg
-    = Initialising flags Url Key (List msg)
+    = Initialising flags Url Key (List msg) (Document Never)
     | Ready model
 
 
@@ -17,15 +17,17 @@ type Msg firstMsg msg
 
 
 init :
-    (flags -> Url -> Key -> Cmd firstMsg)
+    (flags -> Url -> Key -> ( Document Never, Cmd firstMsg) )
     -> flags
     -> Url
     -> Key
     -> ( Model flags model msg, Cmd (Msg firstMsg x) )
 init initFunc f url key =
-    ( Initialising f url key []
-    , initFunc f url key
-        |> Cmd.map Initialise
+    let
+        (initView, initCmd) = initFunc f url key
+    in
+    ( Initialising f url key [] initView
+    , Cmd.map Initialise initCmd
     )
 
 
@@ -43,7 +45,7 @@ update mainUpdate secondInit message mdl =
     case message of
         Initialise firstMessage ->
             case mdl of
-                Initialising f u k mailbox ->
+                Initialising f u k mailbox _ ->
                     List.foldl
                         (\nextMessage ( model, cmd ) ->
                             let
@@ -62,8 +64,8 @@ update mainUpdate secondInit message mdl =
 
         MainMsg mainMsg ->
             case mdl of
-                Initialising f u k mailbox ->
-                    ( Initialising f u k (mainMsg :: mailbox)
+                Initialising f u k mailbox initView ->
+                    ( Initialising f u k (mainMsg :: mailbox) initView
                     , Cmd.none
                     )
 
@@ -74,11 +76,10 @@ update mainUpdate secondInit message mdl =
 
 
 view :
-    Document Never
-    -> (model -> Document msg)
+    (model -> Document msg)
     -> Model flags model msg
     -> Document (Msg x msg)
-view initView mainView mdl =
+view mainView mdl =
     case mdl of
         Ready mainModel ->
             let
@@ -91,7 +92,7 @@ view initView mainView mdl =
             , title = doc.title
             }
 
-        Initialising _ _ _ _ ->
+        Initialising _ _ _ _ initView ->
             let
                 doc =
                     initView
@@ -113,7 +114,7 @@ subscriptions subscriptionsFunc mdl =
             subscriptionsFunc mainModel
                 |> Sub.map MainMsg
 
-        Initialising _ _ _ _ ->
+        Initialising _ _ _ _ _ ->
             Sub.none
 
 
@@ -122,9 +123,8 @@ type alias Program flags model initMsg msg =
 
 
 application :
-    { firstInit : flags -> Url -> Key -> Cmd initMsg
+    { firstInit : flags -> Url -> Key -> ( Document Never, Cmd initMsg )
     , secondInit : flags -> Url -> Key -> initMsg -> ( model, Cmd msg )
-    , initView : Document Never
     , mainView : model -> Document msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
@@ -135,7 +135,7 @@ application :
 application opts =
     Browser.application
         { init = init opts.firstInit
-        , view = view opts.initView opts.mainView
+        , view = view opts.mainView
         , update = update opts.update opts.secondInit
         , subscriptions = subscriptions opts.subscriptions
         , onUrlRequest = opts.onUrlRequest >> MainMsg

@@ -98,7 +98,6 @@ main =
         , onUrlRequest = ClickedLink
         , onUrlChange = UrlChange
         , mainView = view
-        , initView = { body = [], title = "" }
         , subscriptions = subscriptions
         , update = update
         }
@@ -120,11 +119,13 @@ firstInit :
     Flags
     -> Url.Url
     -> Browser.Navigation.Key
-    -> Cmd ViewportSize
+    -> ( Browser.Document Never, Cmd ViewportSize )
 firstInit _ _ _ =
-    Browser.Dom.getViewport
+    ( { body = [], title = "" }
+    , Browser.Dom.getViewport
         |> Task.map extractViewport
         |> Task.perform identity
+    )
 
 
 secondInit : Flags -> Url.Url -> Browser.Navigation.Key -> ViewportSize -> ( Model, Cmd Msg )
