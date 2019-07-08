@@ -81,12 +81,12 @@ view :
     (model -> Document msg)
     -> Model flags model msg
     -> Document (Msg x msg)
-view mainView mdl =
+view view_ mdl =
     case mdl of
         Ready mainModel ->
             let
                 doc =
-                    mainView mainModel
+                    view_ mainModel
             in
             { body =
                 doc.body
@@ -127,7 +127,7 @@ type alias Program flags model initMsg msg =
 application :
     { firstInit : flags -> Url -> Key -> ( Document Never, Task Never initMsg )
     , secondInit : flags -> Url -> Key -> initMsg -> ( model, Cmd msg )
-    , mainView : model -> Document msg
+    , view : model -> Document msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , onUrlRequest : UrlRequest -> msg
@@ -137,7 +137,7 @@ application :
 application opts =
     Browser.application
         { init = init opts.firstInit
-        , view = view opts.mainView
+        , view = view opts.view
         , update = update opts.update opts.secondInit
         , subscriptions = subscriptions opts.subscriptions
         , onUrlRequest = opts.onUrlRequest >> MainMsg

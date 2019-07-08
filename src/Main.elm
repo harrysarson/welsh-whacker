@@ -97,7 +97,7 @@ main =
         , secondInit = secondInit
         , onUrlRequest = ClickedLink
         , onUrlChange = UrlChange
-        , mainView = view
+        , view = view
         , subscriptions = subscriptions
         , update = update
         }
