@@ -17,14 +17,15 @@ type Msg firstMsg msg
 
 
 init :
-    (flags -> Url -> Key -> ( Document Never, Cmd firstMsg) )
+    (flags -> Url -> Key -> ( Document Never, Cmd firstMsg ))
     -> flags
     -> Url
     -> Key
     -> ( Model flags model msg, Cmd (Msg firstMsg x) )
 init initFunc f url key =
     let
-        (initView, initCmd) = initFunc f url key
+        ( initView, initCmd ) =
+            initFunc f url key
     in
     ( Initialising f url key [] initView
     , Cmd.map Initialise initCmd
