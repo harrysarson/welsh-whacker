@@ -127,8 +127,8 @@ preInit _ _ _ =
     )
 
 
-postInit :  ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-postInit viewport flags url key  =
+postInit : ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+postInit viewport flags url key =
     let
         urlThing =
             Url.Parser.parse
