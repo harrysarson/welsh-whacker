@@ -1,14 +1,14 @@
-module Lib.InitApp exposing (Program, application)
+module Lib.InitApp exposing (Application, application, document, element)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation exposing (Key)
-import Html
+import Html exposing (Html)
 import Task exposing (Task)
 import Url exposing (Url)
 
 
-type Model flags model msg
-    = Initialising flags Url Key (List msg) (Document Never)
+type Model initData model msg
+    = Initialising initData (List msg)
     | Ready model
 
 
@@ -18,36 +18,34 @@ type Msg firstMsg msg
 
 
 init :
-    (flags -> Url -> Key -> ( Document Never, Task Never firstMsg ))
-    -> flags
-    -> Url
-    -> Key
-    -> ( Model flags model msg, Cmd (Msg firstMsg x) )
-init initFunc f url key =
+    (initData -> ( view, Task Never firstMsg ))
+    -> initData
+    -> ( Model (initData, view) model msg, Cmd (Msg firstMsg x) )
+init initFunc initData =
     let
         ( initView, initCmd ) =
-            initFunc f url key
+            initFunc initData
     in
-    ( Initialising f url key [] initView
+    ( Initialising (initData, initView) []
     , Task.perform Initialise initCmd
     )
 
 
 update :
     (msg -> model -> ( model, Cmd msg ))
-    -> (flags -> Url -> Key -> firstMsg -> ( model, Cmd msg ))
+    -> (firstMsg -> initData -> ( model, Cmd msg ))
     -> Msg firstMsg msg
-    -> Model flags model msg
-    -> ( Model flags model msg, Cmd (Msg firstMsg msg) )
-update mainUpdate secondInit message mdl =
+    -> Model initData model msg
+    -> ( Model initData model msg, Cmd (Msg firstMsg msg) )
+update mainUpdate postInit message mdl =
     let
         crash () =
-            update mainUpdate secondInit message mdl
+            update mainUpdate postInit message mdl
     in
     case message of
         Initialise firstMessage ->
             case mdl of
-                Initialising f u k mailbox _ ->
+                Initialising initData mailbox ->
                     List.foldl
                         (\nextMessage ( model, cmd ) ->
                             let
@@ -56,7 +54,7 @@ update mainUpdate secondInit message mdl =
                             in
                             ( newModel, Cmd.batch [ cmd, newCmd ] )
                         )
-                        (secondInit f u k firstMessage)
+                        (postInit firstMessage initData)
                         mailbox
                         |> Tuple.mapFirst Ready
                         |> Tuple.mapSecond (Cmd.map MainMsg)
@@ -66,8 +64,8 @@ update mainUpdate secondInit message mdl =
 
         MainMsg mainMsg ->
             case mdl of
-                Initialising f u k mailbox initView ->
-                    ( Initialising f u k (mainMsg :: mailbox) initView
+                Initialising initData mailbox ->
+                    ( Initialising initData (mainMsg :: mailbox)
                     , Cmd.none
                     )
 
@@ -77,38 +75,43 @@ update mainUpdate secondInit message mdl =
                         |> Tuple.mapSecond (Cmd.map MainMsg)
 
 
+mapDocument : (a -> b) -> Document a -> Document b
+mapDocument tagger doc =
+    { body =
+        doc.body
+            |> List.map (Html.map tagger)
+    , title = doc.title
+    }
+
 view :
     (model -> Document msg)
-    -> Model flags model msg
+    -> Model (initData, (Document Never)) model msg
     -> Document (Msg x msg)
 view view_ mdl =
     case mdl of
         Ready mainModel ->
-            let
-                doc =
-                    view_ mainModel
-            in
-            { body =
-                doc.body
-                    |> List.map (Html.map MainMsg)
-            , title = doc.title
-            }
+            mapDocument MainMsg (view_ mainModel)
 
-        Initialising _ _ _ _ initView ->
-            let
-                doc =
-                    initView
-            in
-            { body =
-                doc.body
-                    |> List.map (Html.map never)
-            , title = doc.title
-            }
+        Initialising (_, initView) _ ->
+            mapDocument never initView
+
+elView :
+    (model -> Html msg)
+    -> Model (initData, (Html Never)) model msg
+    -> Html (Msg x msg)
+elView view_ mdl =
+    case mdl of
+        Ready mainModel ->
+            Html.map MainMsg (view_ mainModel)
+
+        Initialising (_, initView) _ ->
+            Html.map never initView
+
 
 
 subscriptions :
     (model -> Sub msg)
-    -> Model flags model msg
+    -> Model initData model msg
     -> Sub (Msg x msg)
 subscriptions subscriptionsFunc mdl =
     case mdl of
@@ -116,30 +119,69 @@ subscriptions subscriptionsFunc mdl =
             subscriptionsFunc mainModel
                 |> Sub.map MainMsg
 
-        Initialising _ _ _ _ _ ->
+        Initialising _ _ ->
             Sub.none
 
 
-type alias Program flags model initMsg msg =
-    Platform.Program flags (Model flags model msg) (Msg initMsg msg)
+type alias Application flags model initMsg msg =
+    Platform.Program flags (Model (( flags, Url, Key ), (Document Never)) model msg) (Msg initMsg msg)
 
 
 application :
-    { firstInit : flags -> Url -> Key -> ( Document Never, Task Never initMsg )
-    , secondInit : flags -> Url -> Key -> initMsg -> ( model, Cmd msg )
+    { preInit : flags -> Url -> Key -> ( Document Never, Task Never initMsg )
+    , postInit : initMsg -> flags -> Url -> Key -> ( model, Cmd msg )
     , view : model -> Document msg
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     , onUrlRequest : UrlRequest -> msg
     , onUrlChange : Url -> msg
     }
-    -> Program flags model initMsg msg
+    -> Application flags model initMsg msg
 application opts =
     Browser.application
-        { init = init opts.firstInit
-        , view = view opts.view
-        , update = update opts.update opts.secondInit
+        { init = \f u k -> init (\( f_, u_, k_ ) -> opts.preInit f_ u_ k_) ( f, u, k )
+        , view =
+            view opts.view
+        , update = update opts.update (\initMsg (( f, u, k ), _) -> opts.postInit initMsg f u k)
         , subscriptions = subscriptions opts.subscriptions
         , onUrlRequest = opts.onUrlRequest >> MainMsg
         , onUrlChange = opts.onUrlChange >> MainMsg
+        }
+
+
+-- type alias Program flags model initMsg msg =
+--     Platform.Program flags (Model flags model msg ) (Msg initMsg msg)
+
+
+document :
+    { preInit : flags -> ( Document Never, Task Never initMsg )
+    , postInit : initMsg -> flags -> ( model, Cmd msg )
+    , view : model -> Document msg
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    }
+    -> Platform.Program flags (Model (flags, (Document Never)) model msg) (Msg initMsg msg)
+document opts =
+    Browser.document
+        { init = init opts.preInit
+        , view =
+            view opts.view
+        , update = update opts.update (\firstMsg (flags, _) -> opts.postInit firstMsg flags)
+        , subscriptions = subscriptions opts.subscriptions
+        }
+
+element :
+    { preInit : flags -> ( Html Never, Task Never initMsg )
+    , postInit : initMsg -> flags -> ( model, Cmd msg )
+    , view : model -> Html msg
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    }
+    -> Platform.Program flags (Model (flags, (Html Never)) model msg) (Msg initMsg msg)
+element opts =
+    Browser.element
+        { init = init opts.preInit
+        , view = elView opts.view
+        , update = update opts.update (\firstMsg (flags, _) -> opts.postInit firstMsg flags)
+        , subscriptions = subscriptions opts.subscriptions
         }

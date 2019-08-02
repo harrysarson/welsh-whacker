@@ -90,11 +90,11 @@ type alias Flags =
     }
 
 
-main : Lib.InitApp.Program Flags Model ViewportSize Msg
+main : Lib.InitApp.Application Flags Model ViewportSize Msg
 main =
     Lib.InitApp.application
-        { firstInit = firstInit
-        , secondInit = secondInit
+        { preInit = preInit
+        , postInit = postInit
         , onUrlRequest = ClickedLink
         , onUrlChange = UrlChange
         , view = view
@@ -115,20 +115,20 @@ subscriptions model =
         ]
 
 
-firstInit :
+preInit :
     Flags
     -> Url.Url
     -> Browser.Navigation.Key
     -> ( Browser.Document Never, Task.Task Never ViewportSize )
-firstInit _ _ _ =
+preInit _ _ _ =
     ( { body = [], title = "" }
     , Browser.Dom.getViewport
         |> Task.map extractViewport
     )
 
 
-secondInit : Flags -> Url.Url -> Browser.Navigation.Key -> ViewportSize -> ( Model, Cmd Msg )
-secondInit flags url key viewport =
+postInit :  ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+postInit viewport flags url key  =
     let
         urlThing =
             Url.Parser.parse
@@ -297,7 +297,7 @@ update msg model =
             )
 
         UrlChange url ->
-            secondInit model.imageUrls url model.key model.viewport
+            postInit model.viewport model.imageUrls url model.key
 
         Resize width height ->
             ( { model
