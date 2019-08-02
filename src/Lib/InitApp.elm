@@ -20,13 +20,13 @@ type Msg firstMsg msg
 init :
     (initData -> ( view, Task Never firstMsg ))
     -> initData
-    -> ( Model (initData, view) model msg, Cmd (Msg firstMsg x) )
+    -> ( Model ( initData, view ) model msg, Cmd (Msg firstMsg x) )
 init initFunc initData =
     let
         ( initView, initCmd ) =
             initFunc initData
     in
-    ( Initialising (initData, initView) []
+    ( Initialising ( initData, initView ) []
     , Task.perform Initialise initCmd
     )
 
@@ -83,30 +83,31 @@ mapDocument tagger doc =
     , title = doc.title
     }
 
+
 view :
     (model -> Document msg)
-    -> Model (initData, (Document Never)) model msg
+    -> Model ( initData, Document Never ) model msg
     -> Document (Msg x msg)
 view view_ mdl =
     case mdl of
         Ready mainModel ->
             mapDocument MainMsg (view_ mainModel)
 
-        Initialising (_, initView) _ ->
+        Initialising ( _, initView ) _ ->
             mapDocument never initView
+
 
 elView :
     (model -> Html msg)
-    -> Model (initData, (Html Never)) model msg
+    -> Model ( initData, Html Never ) model msg
     -> Html (Msg x msg)
 elView view_ mdl =
     case mdl of
         Ready mainModel ->
             Html.map MainMsg (view_ mainModel)
 
-        Initialising (_, initView) _ ->
+        Initialising ( _, initView ) _ ->
             Html.map never initView
-
 
 
 subscriptions :
@@ -124,7 +125,7 @@ subscriptions subscriptionsFunc mdl =
 
 
 type alias Application flags model initMsg msg =
-    Platform.Program flags (Model (( flags, Url, Key ), (Document Never)) model msg) (Msg initMsg msg)
+    Platform.Program flags (Model ( ( flags, Url, Key ), Document Never ) model msg) (Msg initMsg msg)
 
 
 application :
@@ -142,11 +143,12 @@ application opts =
         { init = \f u k -> init (\( f_, u_, k_ ) -> opts.preInit f_ u_ k_) ( f, u, k )
         , view =
             view opts.view
-        , update = update opts.update (\initMsg (( f, u, k ), _) -> opts.postInit initMsg f u k)
+        , update = update opts.update (\initMsg ( ( f, u, k ), _ ) -> opts.postInit initMsg f u k)
         , subscriptions = subscriptions opts.subscriptions
         , onUrlRequest = opts.onUrlRequest >> MainMsg
         , onUrlChange = opts.onUrlChange >> MainMsg
         }
+
 
 
 -- type alias Program flags model initMsg msg =
@@ -160,15 +162,16 @@ document :
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     }
-    -> Platform.Program flags (Model (flags, (Document Never)) model msg) (Msg initMsg msg)
+    -> Platform.Program flags (Model ( flags, Document Never ) model msg) (Msg initMsg msg)
 document opts =
     Browser.document
         { init = init opts.preInit
         , view =
             view opts.view
-        , update = update opts.update (\firstMsg (flags, _) -> opts.postInit firstMsg flags)
+        , update = update opts.update (\firstMsg ( flags, _ ) -> opts.postInit firstMsg flags)
         , subscriptions = subscriptions opts.subscriptions
         }
+
 
 element :
     { preInit : flags -> ( Html Never, Task Never initMsg )
@@ -177,11 +180,11 @@ element :
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     }
-    -> Platform.Program flags (Model (flags, (Html Never)) model msg) (Msg initMsg msg)
+    -> Platform.Program flags (Model ( flags, Html Never ) model msg) (Msg initMsg msg)
 element opts =
     Browser.element
         { init = init opts.preInit
         , view = elView opts.view
-        , update = update opts.update (\firstMsg (flags, _) -> opts.postInit firstMsg flags)
+        , update = update opts.update (\firstMsg ( flags, _ ) -> opts.postInit firstMsg flags)
         , subscriptions = subscriptions opts.subscriptions
         }
