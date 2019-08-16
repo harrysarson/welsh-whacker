@@ -3,6 +3,6 @@
     "cssnano": "4.1.10",
     "elm-hot": "1.1.1",
     "node-elm-compiler": "5.0.4",
-    "sass": "1.22.9"
+    "sass": "1.22.10"
   }
 }
