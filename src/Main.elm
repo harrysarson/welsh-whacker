@@ -90,7 +90,7 @@ type alias Flags =
     }
 
 
-main : Lib.InitApp.Application Flags Model ViewportSize Msg
+main : Lib.InitApp.ApplicationProgram Flags Model ViewportSize Msg
 main =
     Lib.InitApp.application
         { preInit = preInit
