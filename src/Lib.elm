@@ -67,26 +67,25 @@ approxSearch word maxCost (Trie _ children) =
                     word
                     currentRow
                     maxCost
-                    { satisfiesCost = []
-                    , minimumCost = Nothing
-                    }
+                    Nothing
     in
-    case ( List.isEmpty matches.satisfiesCost, matches.minimumCost ) of
-        ( True, Just m ) ->
+    case matches of
+        Nothing ->
+            []
+
+        Just (MinimumCost m) ->
             [ m ]
 
-        _ ->
-            matches.satisfiesCost
-                |> List.sortBy Tuple.first
+        Just (SatisfiesCost ls) ->
+            List.sortBy Tuple.first (List.Nonempty.toList ls)
 
 
-type alias ApproxSearchHelpResult a =
-    { satisfiesCost : List ( Int, a )
-    , minimumCost : Maybe ( Int, a )
-    }
+type ApproxSearchHelpResult a
+    = SatisfiesCost (Nonempty ( Int, a ))
+    | MinimumCost ( Int, a )
 
 
-approxSearchFolder : String -> Nonempty Int -> Int -> ApproxSearchHelpResult a -> Dict Char (Trie a) -> ApproxSearchHelpResult a
+approxSearchFolder : String -> Nonempty Int -> Int -> Maybe (ApproxSearchHelpResult a) -> Dict Char (Trie a) -> Maybe (ApproxSearchHelpResult a)
 approxSearchFolder word currentRow maxCost initial =
     Dict.foldl
         (\childsLetter child matches ->
@@ -94,26 +93,33 @@ approxSearchFolder word currentRow maxCost initial =
                 childMatches =
                     approxSearchHelp childsLetter word currentRow maxCost child
             in
-            { satisfiesCost = childMatches.satisfiesCost ++ matches.satisfiesCost
-            , minimumCost =
-                case ( childMatches.minimumCost, matches.minimumCost ) of
-                    ( Nothing, Nothing ) ->
-                        Nothing
+            case ( childMatches, matches ) of
+                ( Nothing, _ ) ->
+                    matches
 
-                    ( Just m, Nothing ) ->
-                        Just m
+                ( _, Nothing ) ->
+                    childMatches
 
-                    ( Nothing, Just m ) ->
-                        Just m
+                ( Just resChild, Just res ) ->
+                    Just
+                        (case ( resChild, res ) of
+                            ( MinimumCost mChild, MinimumCost m ) ->
+                                MinimumCost (minBy Tuple.first mChild m)
 
-                    ( Just m1, Just m2 ) ->
-                        Just <| minBy Tuple.first m1 m2
-            }
+                            ( MinimumCost _, SatisfiesCost xs ) ->
+                                SatisfiesCost xs
+
+                            ( SatisfiesCost xs, MinimumCost _ ) ->
+                                SatisfiesCost xs
+
+                            ( SatisfiesCost xsChild, SatisfiesCost xs ) ->
+                                SatisfiesCost (List.Nonempty.append xsChild xs)
+                        )
         )
         initial
 
 
-approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> ApproxSearchHelpResult a
+approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> Maybe (ApproxSearchHelpResult a)
 approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
     let
         getCurrentRow row previous word_ =
@@ -175,19 +181,17 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
             List.Nonempty.head currentRow
 
         ourMatch =
-            { satisfiesCost =
-                case ( ourCost <= maxCost, maybeValue ) of
-                    ( True, Just value ) ->
-                        [ ( ourCost, value ) ]
+            maybeValue
+                |> Maybe.map
+                    (\value ->
+                        if ourCost <= maxCost then
+                            SatisfiesCost (List.Nonempty.fromElement ( ourCost, value ))
 
-                    _ ->
-                        []
-            , minimumCost =
-                maybeValue
-                    |> Maybe.map (\value -> ( ourCost, value ))
-            }
+                        else
+                            MinimumCost ( ourCost, value )
+                    )
     in
-    if minimum currentRow < maxCost || ourMatch.minimumCost == Nothing then
+    if minimum currentRow < maxCost || ourMatch == Nothing then
         children
             |> approxSearchFolder word (List.Nonempty.reverse currentRow) maxCost ourMatch
 
