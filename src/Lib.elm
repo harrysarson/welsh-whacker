@@ -62,12 +62,14 @@ approxSearch word maxCost (Trie _ children) =
             construct 0 (List.range 1 (String.length word))
 
         matches =
-            children
-                |> approxSearchFolder
+            Dict.foldr
+                (approxSearchFolder
                     word
                     currentRow
                     maxCost
-                    Nothing
+                )
+                Nothing
+                children
     in
     case matches of
         Nothing ->
@@ -80,69 +82,57 @@ approxSearch word maxCost (Trie _ children) =
             List.sortBy Tuple.first (List.Nonempty.toList ls)
 
 
-type ApproxSearchHelpResult a
-    = SatisfiesCost (Nonempty ( Int, a ))
-    | MinimumCost ( Int, a )
+type ApproxSearchHelpResult number a
+    = SatisfiesCost (Nonempty ( number, a ))
+    | MinimumCost ( number, a )
 
 
-approxSearchFolder : String -> Nonempty Int -> Int -> Maybe (ApproxSearchHelpResult a) -> Dict Char (Trie a) -> Maybe (ApproxSearchHelpResult a)
-approxSearchFolder word currentRow maxCost initial =
-    Dict.foldl
-        (\childsLetter child matches ->
-            let
-                childMatches =
-                    approxSearchHelp childsLetter word currentRow maxCost child
-            in
-            case ( childMatches, matches ) of
-                ( Nothing, _ ) ->
-                    matches
+approxSearchFolder : String -> Nonempty number -> number -> Char -> Trie a -> Maybe (ApproxSearchHelpResult number a) -> Maybe (ApproxSearchHelpResult number a)
+approxSearchFolder word currentRow maxCost childsLetter child matches =
+    let
+        childMatches =
+            approxSearchHelp childsLetter word currentRow maxCost child
+    in
+    case ( childMatches, matches ) of
+        ( Nothing, _ ) ->
+            matches
 
-                ( _, Nothing ) ->
-                    childMatches
+        ( _, Nothing ) ->
+            childMatches
 
-                ( Just resChild, Just res ) ->
-                    Just
-                        (case ( resChild, res ) of
-                            ( MinimumCost mChild, MinimumCost m ) ->
-                                MinimumCost (minBy Tuple.first mChild m)
+        ( Just resChild, Just res ) ->
+            Just
+                (case ( resChild, res ) of
+                    ( MinimumCost mChild, MinimumCost m ) ->
+                        MinimumCost (minBy Tuple.first mChild m)
 
-                            ( MinimumCost _, SatisfiesCost xs ) ->
-                                SatisfiesCost xs
+                    ( MinimumCost _, SatisfiesCost xs ) ->
+                        SatisfiesCost xs
 
-                            ( SatisfiesCost xs, MinimumCost _ ) ->
-                                SatisfiesCost xs
+                    ( SatisfiesCost xs, MinimumCost _ ) ->
+                        SatisfiesCost xs
 
-                            ( SatisfiesCost xsChild, SatisfiesCost xs ) ->
-                                SatisfiesCost (List.Nonempty.append xsChild xs)
-                        )
-        )
-        initial
+                    ( SatisfiesCost xsChild, SatisfiesCost xs ) ->
+                        SatisfiesCost (List.Nonempty.append xsChild xs)
+                )
 
 
-approxSearchHelp : Char -> String -> Nonempty Int -> Int -> Trie a -> Maybe (ApproxSearchHelpResult a)
+approxSearchHelp : Char -> String -> Nonempty number -> number -> Trie a -> Maybe (ApproxSearchHelpResult number a)
 approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
     let
         getCurrentRow row previous word_ =
-            -- let
-            --     -- _ = Debug.log "prev" previous
-            --     -- _ = Debug.log "words" word_
-            -- in
             case String.uncons word_ of
-                -- (Debug.log "word_" word_) of
                 Just ( wordFirst, wordRest ) ->
                     case List.Nonempty.fromList (List.Nonempty.tail previous) of
                         Just previousTail ->
                             let
                                 insertCost =
-                                    -- Debug.log+ "ic"
                                     List.Nonempty.head row + 1
 
                                 deleteCost =
-                                    -- Debug.log "dc"
                                     List.Nonempty.head previousTail + 1
 
                                 replaceCost =
-                                    -- Debug.log "rc"
                                     List.Nonempty.head previous
                                         + (if wordFirst /= letter then
                                             1
@@ -150,9 +140,6 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
                                            else
                                             0
                                           )
-
-                                -- _ =
-                                --     Debug.log "l w" ( letter, wordFirst, wordRest )
                             in
                             getCurrentRow
                                 (List.Nonempty.cons
@@ -166,15 +153,12 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
                             row
 
                 Nothing ->
-                    -- Debug.log "Make state impossible 2"
                     row
 
         currentRow =
-            -- Debug.log "current row" <|
             getCurrentRow
                 (List.Nonempty.fromElement (List.Nonempty.head previousRow + 1))
                 previousRow
-                -- (Debug.log "prev row ip" <| previousRow)
                 word
 
         ourCost =
@@ -192,8 +176,14 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
                     )
     in
     if minimum currentRow < maxCost || ourMatch == Nothing then
-        children
-            |> approxSearchFolder word (List.Nonempty.reverse currentRow) maxCost ourMatch
+        Dict.foldr
+            (approxSearchFolder
+                word
+                (List.Nonempty.reverse currentRow)
+                maxCost
+            )
+            ourMatch
+            children
 
     else
         ourMatch
