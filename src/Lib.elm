@@ -58,14 +58,14 @@ setOpacity alpha color =
 approxSearch : String -> Int -> Trie a -> List ( Int, a )
 approxSearch word maxCost (Trie _ children) =
     let
-        currentRow =
+        firstRow =
             construct 0 (List.range 1 (String.length word))
 
         matches =
             Dict.foldr
                 (approxSearchFolder
                     word
-                    currentRow
+                    firstRow
                     maxCost
                 )
                 Nothing
@@ -121,38 +121,33 @@ approxSearchHelp : Char -> String -> Nonempty number -> number -> Trie a -> Mayb
 approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
     let
         getCurrentRow row previous word_ =
-            case String.uncons word_ of
-                Just ( wordFirst, wordRest ) ->
-                    case List.Nonempty.fromList (List.Nonempty.tail previous) of
-                        Just previousTail ->
-                            let
-                                insertCost =
-                                    List.Nonempty.head row + 1
+            case ( String.uncons word_, List.Nonempty.fromList (List.Nonempty.tail previous) ) of
+                ( Just ( wordFirst, wordRest ), Just previousTail ) ->
+                    let
+                        insertCost =
+                            List.Nonempty.head row + 1
 
-                                deleteCost =
-                                    List.Nonempty.head previousTail + 1
+                        deleteCost =
+                            List.Nonempty.head previousTail + 1
 
-                                replaceCost =
-                                    List.Nonempty.head previous
-                                        + (if wordFirst /= letter then
-                                            1
+                        replaceCost =
+                            List.Nonempty.head previous
+                                + (if wordFirst /= letter then
+                                    1
 
-                                           else
-                                            0
-                                          )
-                            in
-                            getCurrentRow
-                                (List.Nonempty.cons
-                                    (min insertCost (min deleteCost replaceCost))
-                                    row
-                                )
-                                previousTail
-                                wordRest
-
-                        Nothing ->
+                                   else
+                                    0
+                                  )
+                    in
+                    getCurrentRow
+                        (List.Nonempty.cons
+                            (min insertCost (min deleteCost replaceCost))
                             row
+                        )
+                        previousTail
+                        wordRest
 
-                Nothing ->
+                _ ->
                     row
 
         currentRow =
