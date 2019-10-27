@@ -1,7 +1,7 @@
 module Lib exposing (enterDecoder, onEnter, setOpacity, waleSearch)
 
 import Content.WelshPlaces
-import Dict exposing (Dict)
+import Dict
 import Element
 import Html.Events
 import Json.Decode as Decode
