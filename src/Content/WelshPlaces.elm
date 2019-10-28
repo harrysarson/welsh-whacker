@@ -137,7 +137,7 @@ type
       -- | Talgarth
       -- | Welshpool
       -- | Barry
-      -- | Cardiff
+    | Cardiff
       -- | Cowbridge
       -- | LlantwitMajor
       -- | Penarth
@@ -840,11 +840,12 @@ getInfo place =
         --     , blurb = Nothing "Barry"
         --     , wikipedia = "Barry"
         --     }
-        -- Cardiff ->
-        --     { name = "Cardiff"
-        --     , blurb = Nothing "Cardiff"
-        --     , wikipedia = "Cardiff"
-        --     }
+        Cardiff ->
+            { name = "Cardiff"
+            , blurb = "The captial city of Wales, located in the south west of the country."
+            , wikipedia = "Cardiff"
+            }
+
         -- Cowbridge ->
         --     { name = "Cowbridge"
         --     , blurb = Nothing "Cowbridge"
@@ -1083,7 +1084,7 @@ infoLookup =
         -- |> insert "talgarth" Talgarth
         -- |> insert "welshpool" Welshpool
         -- |> insert "barry" Barry
-        -- |> insert "cardiff" Cardiff
+        |> insert "cardiff" Cardiff
         -- |> insert "cowbridge" Cowbridge
         -- |> insert "llantwitmajor" LlantwitMajor
         -- |> insert "penarth" Penarth

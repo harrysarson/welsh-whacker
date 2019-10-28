@@ -135,6 +135,14 @@ postInit viewport flags url key =
                 urlParser
                 url
                 |> Maybe.withDefault Empty
+
+        ( place, debugMatches ) =
+            case urlThing of
+                Town t ->
+                    search t
+
+                _ ->
+                    ( Searching, [] )
     in
     ( { input =
             case urlThing of
@@ -143,17 +151,12 @@ postInit viewport flags url key =
 
                 _ ->
                     ""
-      , place =
-            case urlThing of
-                Town t ->
-                    search t
-
-                _ ->
-                    Searching
+      , place = place
       , key = key
       , showInfo = False
       , viewport = viewport
       , imageUrls = flags
+      , debug = Nothing -- { matches = Just debugMatches }
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
@@ -191,7 +194,12 @@ type alias Model =
     , showInfo : Bool
     , viewport : ViewportSize
     , imageUrls : Flags
+    , debug : Maybe Debug
     }
+
+
+type alias Debug =
+    { matches : Maybe (List ( Int, Content.WelshPlaces.Place )) }
 
 
 type Msg
@@ -215,8 +223,21 @@ update msg model =
             let
                 limitted =
                     String.slice 0 25 new
+
+                newDebug =
+                    Maybe.map
+                        (\oldDebug ->
+                            let
+                                ( _, debugMatches ) =
+                                    search limitted
+                            in
+                            { oldDebug
+                                | matches = Debug.log "Matches type" (Just debugMatches)
+                            }
+                        )
+                        model.debug
             in
-            ( { model | input = limitted }
+            ( { model | input = limitted, debug = newDebug }
             , Browser.Navigation.replaceUrl
                 model.key
                 (Url.Builder.relative [] [ Url.Builder.string "input" limitted ])
@@ -260,10 +281,19 @@ update msg model =
             case model.place of
                 FindingPlace str ->
                     let
-                        newPlace =
+                        ( newPlace, debugMatches ) =
                             search str
+
+                        newDebug =
+                            Maybe.map
+                                (\oldDebug ->
+                                    { oldDebug
+                                        | matches = Just debugMatches
+                                    }
+                                )
+                                model.debug
                     in
-                    ( { model | place = newPlace }
+                    ( { model | place = newPlace, debug = newDebug }
                     , case newPlace of
                         FoundPlace ( _, newPlace_ ) ->
                             let
@@ -297,7 +327,9 @@ update msg model =
             )
 
         UrlChange url ->
-            postInit model.viewport model.imageUrls url model.key
+            -- postInit model.viewport model.imageUrls url model.key
+            -- TODO: why should I not remove the line above?
+            ( model, Cmd.none )
 
         Resize width height ->
             ( { model
@@ -327,24 +359,6 @@ view model =
                 _ ->
                     Nothing
 
-        -- straddledBox =
-        --     case town of
-        --          town_ ->
-        --             E.image
-        --                 [ E.htmlAttribute (Html.Attributes.style "transform" "translateY(80%)")
-        --                 , E.width (E.px <| padding * 8)
-        --                 , E.centerX
-        --                 ]
-        --                     (E.text (String.fromInt cost ++ ": " ++ name))
-        --                 , E.html
-        --                     (Html.iframe
-        --                         [ Html.Attributes.src ("https://en.wikipedia.org/wiki/" ++ wikipedia)
-        --                         , Html.Attributes.style "width" "100%"
-        --                         ]
-        --                         []
-        --                     )
-        --                 ]
-        --             )
         inputBox =
             E.row
                 [ E.htmlAttribute <| Html.Attributes.class "input-box"
@@ -745,14 +759,24 @@ view model =
                                     ]
                                 , E.el
                                     [ E.width E.fill ]
-                                    (E.el
-                                        [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
-                                        (E.html
-                                            (Svg.svg
-                                                (Tuple.first Icons.welshDragon <| { width = px (fontBase * 15) })
-                                                (Tuple.second Icons.welshDragon)
-                                            )
-                                        )
+                                    (case model.debug of
+                                        Just debug ->
+                                            E.column
+                                                [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
+                                                (debug.matches
+                                                    |> Maybe.withDefault []
+                                                    |> List.map (\m -> E.text (Debug.toString m))
+                                                )
+
+                                        Nothing ->
+                                            E.el
+                                                [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
+                                                (E.html
+                                                    (Svg.svg
+                                                        (Tuple.first Icons.welshDragon <| { width = px (fontBase * 15) })
+                                                        (Tuple.second Icons.welshDragon)
+                                                    )
+                                                )
                                     )
                                 ]
                         )
@@ -770,14 +794,18 @@ extractViewport { viewport } =
     }
 
 
-search : String -> PlaceResult
+search : String -> ( PlaceResult, List ( Int, Content.WelshPlaces.Place ) )
 search str =
-    case Lib.waleSearch str |> List.head of
+    let
+        results =
+            Lib.waleSearch str
+    in
+    case List.head results of
         Just tuple ->
-            FoundPlace tuple
+            ( FoundPlace tuple, results )
 
         Nothing ->
-            Searching
+            ( Searching, [] )
 
 
 px : Int -> String
@@ -811,6 +839,9 @@ getImageUrl place imageUrls =
 
         Content.WelshPlaces.Caernarfon ->
             imageUrls.caernarfon
+
+        Content.WelshPlaces.Cardiff ->
+            imageUrls.cardiff
 
         Content.WelshPlaces.Pwllheli ->
             imageUrls.pwllheli
