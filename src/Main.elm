@@ -182,8 +182,8 @@ urlParser =
 
 type PlaceResult
     = Searching
-    | AboutToSearch ( Int, Content.WelshPlaces.Place )
-    | FoundPlace ( Int, Content.WelshPlaces.Place )
+    | AboutToSearch ( Float, Content.WelshPlaces.Place )
+    | FoundPlace ( Float, Content.WelshPlaces.Place )
     | FindingPlace String
 
 
@@ -199,7 +199,7 @@ type alias Model =
 
 
 type alias Debug =
-    { matches : Maybe (List ( Int, Content.WelshPlaces.Place )) }
+    { matches : Maybe (List ( Float, Content.WelshPlaces.Place )) }
 
 
 type Msg
@@ -794,7 +794,7 @@ extractViewport { viewport } =
     }
 
 
-search : String -> ( PlaceResult, List ( Int, Content.WelshPlaces.Place ) )
+search : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
 search str =
     let
         results =

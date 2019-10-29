@@ -19,7 +19,7 @@ type alias Row number =
     }
 
 
-waleSearch : String -> List ( Int, Content.WelshPlaces.Place )
+waleSearch : String -> List ( Float, Content.WelshPlaces.Place )
 waleSearch word =
     if word == "" then
         []
@@ -29,7 +29,7 @@ waleSearch word =
             lowerCase =
                 String.toLower word
         in
-        approxSearch lowerCase (max 4 (String.length word // 3)) Content.WelshPlaces.infoLookup
+        approxSearch lowerCase (max 4 (toFloat (String.length word) / 3)) Content.WelshPlaces.infoLookup
 
 
 enterDecoder : msg -> Decode.Decoder msg
@@ -65,14 +65,14 @@ setOpacity alpha color =
         }
 
 
-approxSearch : String -> Int -> Trie a -> List ( Int, a )
+approxSearch : String -> Float -> Trie a -> List ( Float, a )
 approxSearch word maxCost (Trie _ children) =
     let
         firstRow =
             { values =
                 word
                     |> String.toList
-                    |> List.indexedMap (\i c -> { cost = i + 1, char = c })
+                    |> List.indexedMap (\i c -> { cost = toFloat i + 1, char = c })
             , index = 0
             }
 
