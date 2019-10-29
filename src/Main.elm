@@ -252,7 +252,7 @@ update msg model =
                                     search limitted
                             in
                             { oldDebug
-                                | matches = Debug.log "Matches type" (Just debugMatches)
+                                | matches = Just debugMatches
                             }
                         )
                         model.debug
@@ -792,8 +792,8 @@ view model =
                                                 [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
                                                 (debug.matches
                                                     |> Maybe.withDefault []
-                                                    |> List.map (\m -> E.text (Debug.toString m))
-                                                )
+                                                    |> List.map (\m -> E.text (String.fromFloat (Tuple.first m) ++ ": " ++
+                                                            (Content.WelshPlaces.getInfo (Tuple.second m)).name)))
 
                                         Nothing ->
                                             E.el
