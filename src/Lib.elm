@@ -9,6 +9,16 @@ import Lib.Trie exposing (Trie(..))
 import List.Nonempty exposing (Nonempty)
 
 
+type alias Row number =
+    { values :
+        List
+            { cost : number
+            , char : Char
+            }
+    , index : number
+    }
+
+
 waleSearch : String -> List ( Int, Content.WelshPlaces.Place )
 waleSearch word =
     if word == "" then
@@ -59,12 +69,16 @@ approxSearch : String -> Int -> Trie a -> List ( Int, a )
 approxSearch word maxCost (Trie _ children) =
     let
         firstRow =
-            construct 0 (List.range 1 (String.length word))
+            { values =
+                word
+                    |> String.toList
+                    |> List.indexedMap (\i c -> { cost = i + 1, char = c })
+            , index = 0
+            }
 
         matches =
             Dict.foldr
                 (approxSearchFolder
-                    word
                     firstRow
                     maxCost
                 )
@@ -87,11 +101,11 @@ type ApproxSearchHelpResult number a
     | MinimumCost ( number, a )
 
 
-approxSearchFolder : String -> Nonempty number -> number -> Char -> Trie a -> Maybe (ApproxSearchHelpResult number a) -> Maybe (ApproxSearchHelpResult number a)
-approxSearchFolder word currentRow maxCost childsLetter child matches =
+approxSearchFolder : Row number -> number -> Char -> Trie a -> Maybe (ApproxSearchHelpResult number a) -> Maybe (ApproxSearchHelpResult number a)
+approxSearchFolder currentRow maxCost childsLetter child matches =
     let
         childMatches =
-            approxSearchHelp childsLetter word currentRow maxCost child
+            approxSearchHelp childsLetter currentRow maxCost child
     in
     case ( childMatches, matches ) of
         ( Nothing, _ ) ->
@@ -117,21 +131,39 @@ approxSearchFolder word currentRow maxCost childsLetter child matches =
                 )
 
 
-approxSearchHelp : Char -> String -> Nonempty number -> number -> Trie a -> Maybe (ApproxSearchHelpResult number a)
-approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
+approxSearchHelp : Char -> Row number -> number -> Trie a -> Maybe (ApproxSearchHelpResult number a)
+approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
     let
-        getCurrentRow row previous word_ =
-            case ( String.uncons word_, List.Nonempty.fromList (List.Nonempty.tail previous) ) of
-                ( Just ( wordFirst, wordRest ), Just previousTail ) ->
+        getCurrentRow : Row number -> List { cost : number, char : Char }
+        getCurrentRow previous =
+            getCurrentRowHelp
+                curentRowIndex
+                []
+                previous.index
+                previous.values
+
+
+        getCurrentRowHelp : number -> List { cost : number, char : Char } -> number -> List { cost : number, char : Char } -> List { cost : number, char : Char }
+        getCurrentRowHelp index row firstPreviousCost previous =
+            case previous of
+                previous0 :: previousTail ->
                     let
+                        wordFirst =
+                            previous0.char
+
                         insertCost =
-                            List.Nonempty.head row + 1
+                            (row
+                                |> List.head
+                                |> Maybe.map .cost
+                                |> Maybe.withDefault index
+                            )
+                                + 1
 
                         deleteCost =
-                            List.Nonempty.head previousTail + 1
+                            previous0.cost + 1
 
                         replaceCost =
-                            List.Nonempty.head previous
+                            firstPreviousCost
                                 + (if wordFirst /= letter then
                                     1
 
@@ -139,25 +171,31 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
                                     0
                                   )
                     in
-                    getCurrentRow
-                        (List.Nonempty.cons
-                            (min insertCost (min deleteCost replaceCost))
-                            row
+                    getCurrentRowHelp
+                        index
+                        ({ cost = min insertCost (min deleteCost replaceCost)
+                         , char = wordFirst
+                         }
+                            :: row
                         )
+                        previous0.cost
                         previousTail
-                        wordRest
 
                 _ ->
                     row
 
-        currentRow =
+        curentRowIndex =
+            previousRow.index + 1
+
+        currentRowReversed =
             getCurrentRow
-                (List.Nonempty.fromElement (List.Nonempty.head previousRow + 1))
                 previousRow
-                word
 
         ourCost =
-            List.Nonempty.head currentRow
+            currentRowReversed
+                |> List.head
+                |> Maybe.map .cost
+                |> Maybe.withDefault curentRowIndex
 
         ourMatch =
             maybeValue
@@ -170,11 +208,12 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
                             MinimumCost ( ourCost, value )
                     )
     in
-    if minimum currentRow < maxCost || ourMatch == Nothing then
+    if List.foldl min curentRowIndex (List.map .cost currentRowReversed) < maxCost || ourMatch == Nothing then
         Dict.foldr
             (approxSearchFolder
-                word
-                (List.Nonempty.reverse currentRow)
+                { values = List.reverse currentRowReversed
+                , index = curentRowIndex
+                }
                 maxCost
             )
             ourMatch
@@ -186,21 +225,6 @@ approxSearchHelp letter word previousRow maxCost (Trie maybeValue children) =
 
 
 -- UTILITY --
-
-
-construct : a -> List a -> Nonempty a
-construct el list =
-    List.Nonempty.replaceTail list (List.Nonempty.fromElement el)
-
-
-minimum : Nonempty comparable -> comparable
-minimum list =
-    case List.minimum (List.Nonempty.tail list) of
-        Just minFromTail ->
-            min (List.Nonempty.head list) minFromTail
-
-        Nothing ->
-            List.Nonempty.head list
 
 
 minBy : (a -> comparable) -> a -> a -> a
