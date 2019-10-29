@@ -1,5 +1,10 @@
 language: elm
 
+elm:
+  - latest
+elm_test: latest
+elm_format: latest
+
 before_install: "npm install -g parcel-bundler@1.12"
 
 before_deploy: "parcel build index.html --public-url /welsh-whacker/"
