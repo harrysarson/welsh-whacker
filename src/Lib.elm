@@ -150,7 +150,7 @@ approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
                         wordFirst =
                             previous0.char
 
-                        insertCost =
+                        deleteCost =
                             (row
                                 |> List.head
                                 |> Maybe.map .cost
@@ -158,7 +158,7 @@ approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
                             )
                                 + 1
 
-                        deleteCost =
+                        insertCost =
                             previous0.cost + 0.26
 
                         replaceCost =
