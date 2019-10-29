@@ -238,6 +238,24 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        buildUrl thing =
+            Url.Builder.relative []
+                ([ case thing of
+                    Input input ->
+                        Just (Url.Builder.string "input" input)
+
+                    Town town ->
+                        Just (Url.Builder.string "town" town)
+
+                    Empty ->
+                        Nothing
+                 , model.debug
+                    |> Maybe.map (\_ -> Url.Builder.string "debug" "")
+                 ]
+                    |> List.filterMap (\x -> x)
+                )
+    in
     case msg of
         Typing new ->
             let
@@ -260,14 +278,7 @@ update msg model =
             ( { model | input = limitted, debug = newDebug }
             , Browser.Navigation.replaceUrl
                 model.key
-                (Url.Builder.relative []
-                    ([ Just <| Url.Builder.string "input" limitted
-                     , model.debug
-                        |> Maybe.map (\_ -> Url.Builder.string "debug" "")
-                     ]
-                        |> List.filterMap (\x -> x)
-                    )
-                )
+                (buildUrl (Input limitted))
             )
 
         ClickedLink urlRequest ->
@@ -298,7 +309,7 @@ update msg model =
                     ( { model | place = Searching }
                     , Browser.Navigation.pushUrl
                         model.key
-                        (Url.Builder.relative [] [ Url.Builder.string "input" model.input ])
+                        (buildUrl (Input model.input))
                     )
 
                 _ ->
@@ -329,7 +340,7 @@ update msg model =
                             in
                             Browser.Navigation.pushUrl
                                 model.key
-                                (Url.Builder.relative [] [ Url.Builder.string "town" newName ])
+                                (buildUrl (Town newName))
 
                         _ ->
                             Cmd.none
@@ -792,8 +803,15 @@ view model =
                                                 [ E.htmlAttribute <| Html.Attributes.style "margin" "0 auto" ]
                                                 (debug.matches
                                                     |> Maybe.withDefault []
-                                                    |> List.map (\m -> E.text (String.fromFloat (Tuple.first m) ++ ": " ++
-                                                            (Content.WelshPlaces.getInfo (Tuple.second m)).name)))
+                                                    |> List.map
+                                                        (\m ->
+                                                            E.text
+                                                                (String.fromFloat (Tuple.first m)
+                                                                    ++ ": "
+                                                                    ++ (Content.WelshPlaces.getInfo (Tuple.second m)).name
+                                                                )
+                                                        )
+                                                )
 
                                         Nothing ->
                                             E.el
