@@ -130,14 +130,14 @@ preInit _ _ _ =
 postInit : ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 postInit viewport flags url key =
     let
-        urlThing =
+        { thing, debug } =
             Url.Parser.parse
                 urlParser
                 url
-                |> Maybe.withDefault Empty
+                |> Maybe.withDefault { thing = Empty, debug = False }
 
         ( place, debugMatches ) =
-            case urlThing of
+            case thing of
                 Town t ->
                     search t
 
@@ -145,7 +145,7 @@ postInit viewport flags url key =
                     ( Searching, [] )
     in
     ( { input =
-            case urlThing of
+            case thing of
                 Input i ->
                     i
 
@@ -156,7 +156,12 @@ postInit viewport flags url key =
       , showInfo = False
       , viewport = viewport
       , imageUrls = flags
-      , debug = Nothing -- { matches = Just debugMatches }
+      , debug =
+            if debug then
+                Just { matches = Just debugMatches }
+
+            else
+                Nothing
       }
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
@@ -168,16 +173,31 @@ type UrlThings
     | Empty
 
 
-urlParser : Url.Parser.Parser (UrlThings -> a) a
+urlParser : Url.Parser.Parser ({ thing : UrlThings, debug : Bool } -> a) a
 urlParser =
     Url.Parser.oneOf [ Url.Parser.top, Url.Parser.s "welsh-whacker" ]
-        <?> Url.Parser.Query.map2
-                (\input town ->
-                    input
-                        |> Maybe.withDefault (Maybe.withDefault Empty town)
+        <?> Url.Parser.Query.map3
+                (\input town debug ->
+                    { thing =
+                        input
+                            |> Maybe.map Input
+                            |> Maybe.withDefault
+                                (town
+                                    |> Maybe.map Town
+                                    |> Maybe.withDefault Empty
+                                )
+                    , debug =
+                        case debug of
+                            Just _ ->
+                                True
+
+                            Nothing ->
+                                False
+                    }
                 )
-                (Url.Parser.Query.string "input" |> Url.Parser.Query.map (Maybe.map Input))
-                (Url.Parser.Query.string "town" |> Url.Parser.Query.map (Maybe.map Town))
+                (Url.Parser.Query.string "input")
+                (Url.Parser.Query.string "town")
+                (Url.Parser.Query.string "debug")
 
 
 type PlaceResult
@@ -240,7 +260,14 @@ update msg model =
             ( { model | input = limitted, debug = newDebug }
             , Browser.Navigation.replaceUrl
                 model.key
-                (Url.Builder.relative [] [ Url.Builder.string "input" limitted ])
+                (Url.Builder.relative []
+                    ([ Just <| Url.Builder.string "input" limitted
+                     , model.debug
+                        |> Maybe.map (\_ -> Url.Builder.string "debug" "")
+                     ]
+                        |> List.filterMap (\x -> x)
+                    )
+                )
             )
 
         ClickedLink urlRequest ->
