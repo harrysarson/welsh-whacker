@@ -29,7 +29,7 @@ waleSearch word =
             lowerCase =
                 String.toLower word
         in
-        approxSearch lowerCase (max 4 (toFloat (String.length word) / 3)) Content.WelshPlaces.infoLookup
+        approxSearch lowerCase (max 6 (toFloat (String.length word) / 3)) Content.WelshPlaces.infoLookup
 
 
 enterDecoder : msg -> Decode.Decoder msg
@@ -142,7 +142,6 @@ approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
                 previous.index
                 previous.values
 
-
         getCurrentRowHelp : Float -> List { cost : Float, char : Char } -> Float -> List { cost : Float, char : Char } -> List { cost : Float, char : Char }
         getCurrentRowHelp index row firstPreviousCost previous =
             case previous of
@@ -160,7 +159,7 @@ approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
                                 + 1
 
                         deleteCost =
-                            previous0.cost + 1
+                            previous0.cost + 0.26
 
                         replaceCost =
                             firstPreviousCost
