@@ -12,4 +12,4 @@ suite =
         \_ ->
             WP.infoLookup
                 |> Lib.Trie.size
-                |> Expect.equal 17
+                |> Expect.equal 18
