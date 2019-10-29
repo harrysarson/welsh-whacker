@@ -9,13 +9,13 @@ import Lib.Trie exposing (Trie(..))
 import List.Nonempty exposing (Nonempty)
 
 
-type alias Row number =
+type alias Row =
     { values :
         List
-            { cost : number
+            { cost : Float
             , char : Char
             }
-    , index : number
+    , index : Float
     }
 
 
@@ -96,12 +96,12 @@ approxSearch word maxCost (Trie _ children) =
             List.sortBy Tuple.first (List.Nonempty.toList ls)
 
 
-type ApproxSearchHelpResult number a
-    = SatisfiesCost (Nonempty ( number, a ))
-    | MinimumCost ( number, a )
+type ApproxSearchHelpResult a
+    = SatisfiesCost (Nonempty ( Float, a ))
+    | MinimumCost ( Float, a )
 
 
-approxSearchFolder : Row number -> number -> Char -> Trie a -> Maybe (ApproxSearchHelpResult number a) -> Maybe (ApproxSearchHelpResult number a)
+approxSearchFolder : Row -> Float -> Char -> Trie a -> Maybe (ApproxSearchHelpResult a) -> Maybe (ApproxSearchHelpResult a)
 approxSearchFolder currentRow maxCost childsLetter child matches =
     let
         childMatches =
@@ -131,10 +131,10 @@ approxSearchFolder currentRow maxCost childsLetter child matches =
                 )
 
 
-approxSearchHelp : Char -> Row number -> number -> Trie a -> Maybe (ApproxSearchHelpResult number a)
+approxSearchHelp : Char -> Row -> Float -> Trie a -> Maybe (ApproxSearchHelpResult a)
 approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
     let
-        getCurrentRow : Row number -> List { cost : number, char : Char }
+        getCurrentRow : Row -> List { cost : Float, char : Char }
         getCurrentRow previous =
             getCurrentRowHelp
                 curentRowIndex
@@ -143,7 +143,7 @@ approxSearchHelp letter previousRow maxCost (Trie maybeValue children) =
                 previous.values
 
 
-        getCurrentRowHelp : number -> List { cost : number, char : Char } -> number -> List { cost : number, char : Char } -> List { cost : number, char : Char }
+        getCurrentRowHelp : Float -> List { cost : Float, char : Char } -> Float -> List { cost : Float, char : Char } -> List { cost : Float, char : Char }
         getCurrentRowHelp index row firstPreviousCost previous =
             case previous of
                 previous0 :: previousTail ->
