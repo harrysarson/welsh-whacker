@@ -479,27 +479,27 @@ view model =
         infoBox =
             let
                 lineSpacing =
-                    baseSize // 2 + 1
+                    20
             in
             E.el
                 [ Events.onClick HideInfo
                 , E.width fill
                 , E.height fill
                 , E.paddingXY 0 (baseSize * 16)
-                , Background.color (Lib.setOpacity 0.5 Color.black)
+                , Background.color (Lib.setOpacity 0.85 Color.black)
                 ]
                 (E.row
                     []
-                    [ E.el [ E.width fill ] E.none
+                    [ E.el [ E.width (fillPortion 2) ] E.none
                     , E.el
                         [ E.htmlAttribute <| Html.Events.stopPropagationOn "click" (Json.Decode.succeed ( Noop, True ))
-                        , E.width fill
+                        , E.width (fillPortion 3)
                         , E.height fill
                         , Background.color (Lib.setOpacity 0.9 Color.black)
-                        , Border.color Color.red
-                        , Border.width (baseSize // 3 + 1)
+                        , Border.color Color.white
+                        , Border.width (baseSize // 5 + 1)
                         , Border.solid
-                        , Font.color Color.white
+                        , Font.color Color.grey
                         , E.padding padding
                         ]
                         (E.textColumn
@@ -510,8 +510,7 @@ view model =
                             ]
                             [ E.paragraph
                                 [ E.spacing lineSpacing ]
-                                [ E.text "The Welsh Whacker is a website build by Harry Sarson and Phillip Gull."
-                                , E.text "The Welsh Whacker is written in "
+                                [ E.text "The Welsh Whacker is a website build by Harry Sarson and Phillip Gull. The Welsh Whacker is written in "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://elm-lang.org"
@@ -533,8 +532,7 @@ view model =
                                     { url = "https://www.paulstenning.com/uk-towns-and-counties-list"
                                     , label = E.text "\"UK Towns and Counties List\""
                                     }
-                                , E.text ". "
-                                , E.text "The search icon is made by "
+                                , E.text ". The search icon is made by "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://www.freepik.com"
@@ -552,8 +550,7 @@ view model =
                                     { url = "http://creativecommons.org/licenses/by/3.0"
                                     , label = E.text "CC 3.0 BY"
                                     }
-                                , E.text ". "
-                                , E.text "The information icon is made by "
+                                , E.text ". The information icon is made by "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://www.flaticon.com/authors/good-ware"
@@ -571,8 +568,7 @@ view model =
                                     { url = "http://creativecommons.org/licenses/by/3.0"
                                     , label = E.text "CC 3.0 BY"
                                     }
-                                , E.text ". "
-                                , E.text "I am grateful to level "
+                                , E.text ". I am grateful to level "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://level.app/svg-to-elm"
@@ -584,7 +580,7 @@ view model =
                             -- , E.text (Debug.toString model.viewport)
                             ]
                         )
-                    , E.el [ E.width fill ] E.none
+                    , E.el [ E.width (fillPortion 2) ] E.none
                     ]
                 )
 
@@ -622,16 +618,16 @@ view model =
         fontBase =
             case deviceClass of
                 E.Phone ->
-                    16
+                    20
 
                 E.Tablet ->
-                    16
+                    20
 
                 E.Desktop ->
-                    16
+                    20
 
                 E.BigDesktop ->
-                    16
+                    20
 
         body =
             E.layout
@@ -743,7 +739,7 @@ view model =
                                                 E.fill
 
                                             _ ->
-                                                E.px (baseSize * 25)
+                                                E.px (baseSize * 35)
                                         )
                                     , E.paddingXY padding 0
                                     , E.centerX

@@ -8,6 +8,10 @@ html, body {
     height: 100%;
 }
 
+.s {
+    line-height: 1.2 !important;
+}
+
 .hiding, .hide, .showing, .show {
     & > * {
         &:first-child, &:last-child > * {
