@@ -29,7 +29,7 @@ applyUrlToModel url model =
         ( place, debugMatches ) =
             case thing of
                 Town t ->
-                    Lib.waleSearch t
+                    Lib.walesSearch t
 
                 _ ->
                     ( Lib.Searching, [] )

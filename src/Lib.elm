@@ -1,4 +1,4 @@
-module Lib exposing (PlaceResult(..), enterDecoder, onEnter, setOpacity, waleSearch)
+module Lib exposing (PlaceResult(..), enterDecoder, onEnter, setOpacity, walesSearch)
 
 import Content.WelshPlaces
 import Dict
@@ -26,8 +26,8 @@ type PlaceResult
     | FindingPlace String
 
 
-waleSearch : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
-waleSearch word =
+walesSearch : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
+walesSearch word =
     let
         results =
             if word == "" then
