@@ -179,7 +179,7 @@ update msg model =
                         (\oldDebug ->
                             let
                                 ( _, debugMatches ) =
-                                    Lib.waleSearch limitted
+                                    Lib.walesSearch limitted
                             in
                             { oldDebug
                                 | matches = Just debugMatches
@@ -239,7 +239,7 @@ update msg model =
                 Lib.FindingPlace str ->
                     let
                         ( newPlace, debugMatches ) =
-                            Lib.waleSearch str
+                            Lib.walesSearch str
 
                         newDebug =
                             Maybe.map
