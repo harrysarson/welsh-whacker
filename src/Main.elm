@@ -479,11 +479,11 @@ view model =
                                     { url = "http://creativecommons.org/licenses/by/3.0"
                                     , label = E.text "CC 3.0 BY"
                                     }
-                                , E.text ". We am grateful to level "
+                                , E.text ". We are grateful to level for their "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://level.app/svg-to-elm"
-                                    , label = E.text "for their svg-to-elm tool"
+                                    , label = E.text "svg-to-elm tool"
                                     }
                                 , E.text "."
                                 ]
