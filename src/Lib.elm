@@ -1,4 +1,4 @@
-module Lib exposing (enterDecoder, onEnter, setOpacity, waleSearch)
+module Lib exposing (PlaceResult(..), enterDecoder, onEnter, setOpacity, waleSearch)
 
 import Content.WelshPlaces
 import Dict
@@ -19,17 +19,33 @@ type alias Row =
     }
 
 
-waleSearch : String -> List ( Float, Content.WelshPlaces.Place )
-waleSearch word =
-    if word == "" then
-        []
+type PlaceResult
+    = Searching
+    | AboutToSearch ( Float, Content.WelshPlaces.Place )
+    | FoundPlace ( Float, Content.WelshPlaces.Place )
+    | FindingPlace String
 
-    else
-        let
-            lowerCase =
-                String.toLower word
-        in
-        approxSearch lowerCase (max 6 (toFloat (String.length word) / 3)) Content.WelshPlaces.infoLookup
+
+waleSearch : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
+waleSearch word =
+    let
+        results =
+            if word == "" then
+                []
+
+            else
+                let
+                    lowerCase =
+                        String.toLower word
+                in
+                approxSearch lowerCase (max 6 (toFloat (String.length word) / 3)) Content.WelshPlaces.infoLookup
+    in
+    case List.head results of
+        Just tuple ->
+            ( FoundPlace tuple, results )
+
+        Nothing ->
+            ( Searching, [] )
 
 
 enterDecoder : msg -> Decode.Decoder msg
