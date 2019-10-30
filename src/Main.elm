@@ -28,15 +28,14 @@ import Html.Attributes
 import Html.Events
 import Json.Decode
 import Lib
+import Lib.Debugging
 import Lib.InitApp
+import Lib.Url
 import Process
 import Svg
 import Svg.Attributes
 import Task
 import Url
-import Url.Builder
-import Url.Parser exposing ((<?>))
-import Url.Parser.Query
 
 
 changeDelay : Float
@@ -129,97 +128,28 @@ preInit _ _ _ =
 
 postInit : ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 postInit viewport flags url key =
-    let
-        { thing, debug } =
-            Url.Parser.parse
-                urlParser
-                url
-                |> Maybe.withDefault { thing = Empty, debug = False }
-
-        ( place, debugMatches ) =
-            case thing of
-                Town t ->
-                    search t
-
-                _ ->
-                    ( Searching, [] )
-    in
-    ( { input =
-            case thing of
-                Input i ->
-                    i
-
-                _ ->
-                    ""
-      , place = place
+    ( { input = ""
+      , place = Lib.Searching
       , key = key
       , showInfo = False
       , viewport = viewport
       , imageUrls = flags
-      , debug =
-            if debug then
-                Just { matches = Just debugMatches }
-
-            else
-                Nothing
+      , debug = Nothing
       }
+        |> Lib.Url.applyUrlToModel url
     , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
     )
 
 
-type UrlThings
-    = Input String
-    | Town String
-    | Empty
-
-
-urlParser : Url.Parser.Parser ({ thing : UrlThings, debug : Bool } -> a) a
-urlParser =
-    Url.Parser.oneOf [ Url.Parser.top, Url.Parser.s "welsh-whacker" ]
-        <?> Url.Parser.Query.map3
-                (\input town debug ->
-                    { thing =
-                        input
-                            |> Maybe.map Input
-                            |> Maybe.withDefault
-                                (town
-                                    |> Maybe.map Town
-                                    |> Maybe.withDefault Empty
-                                )
-                    , debug =
-                        case debug of
-                            Just _ ->
-                                True
-
-                            Nothing ->
-                                False
-                    }
-                )
-                (Url.Parser.Query.string "input")
-                (Url.Parser.Query.string "town")
-                (Url.Parser.Query.string "debug")
-
-
-type PlaceResult
-    = Searching
-    | AboutToSearch ( Float, Content.WelshPlaces.Place )
-    | FoundPlace ( Float, Content.WelshPlaces.Place )
-    | FindingPlace String
-
-
 type alias Model =
     { input : String
-    , place : PlaceResult
+    , place : Lib.PlaceResult
     , key : Browser.Navigation.Key
     , showInfo : Bool
     , viewport : ViewportSize
     , imageUrls : Flags
-    , debug : Maybe Debug
+    , debug : Maybe Lib.Debugging.Info
     }
-
-
-type alias Debug =
-    { matches : Maybe (List ( Float, Content.WelshPlaces.Place )) }
 
 
 type Msg
@@ -238,24 +168,6 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        buildUrl thing =
-            Url.Builder.relative []
-                ([ case thing of
-                    Input input ->
-                        Just (Url.Builder.string "input" input)
-
-                    Town town ->
-                        Just (Url.Builder.string "town" town)
-
-                    Empty ->
-                        Nothing
-                 , model.debug
-                    |> Maybe.map (\_ -> Url.Builder.string "debug" "")
-                 ]
-                    |> List.filterMap (\x -> x)
-                )
-    in
     case msg of
         Typing new ->
             let
@@ -267,18 +179,21 @@ update msg model =
                         (\oldDebug ->
                             let
                                 ( _, debugMatches ) =
-                                    search limitted
+                                    Lib.waleSearch limitted
                             in
                             { oldDebug
                                 | matches = Just debugMatches
                             }
                         )
                         model.debug
+
+                newModel =
+                    { model | input = limitted, debug = newDebug }
             in
-            ( { model | input = limitted, debug = newDebug }
+            ( newModel
             , Browser.Navigation.replaceUrl
                 model.key
-                (buildUrl (Input limitted))
+                (Lib.Url.buildUrl newModel)
             )
 
         ClickedLink urlRequest ->
@@ -295,8 +210,8 @@ update msg model =
 
         RequestInput ->
             case model.place of
-                FoundPlace p ->
-                    ( { model | place = AboutToSearch p }
+                Lib.FoundPlace p ->
+                    ( { model | place = Lib.AboutToSearch p }
                     , Task.perform (\() -> GoToInput) (Process.sleep changeDelay)
                     )
 
@@ -305,11 +220,15 @@ update msg model =
 
         GoToInput ->
             case model.place of
-                AboutToSearch _ ->
-                    ( { model | place = Searching }
+                Lib.AboutToSearch _ ->
+                    let
+                        newModel =
+                            { model | place = Lib.Searching }
+                    in
+                    ( newModel
                     , Browser.Navigation.pushUrl
                         model.key
-                        (buildUrl (Input model.input))
+                        (Lib.Url.buildUrl newModel)
                     )
 
                 _ ->
@@ -317,10 +236,10 @@ update msg model =
 
         DoSearch ->
             case model.place of
-                FindingPlace str ->
+                Lib.FindingPlace str ->
                     let
                         ( newPlace, debugMatches ) =
-                            search str
+                            Lib.waleSearch str
 
                         newDebug =
                             Maybe.map
@@ -330,27 +249,21 @@ update msg model =
                                     }
                                 )
                                 model.debug
-                    in
-                    ( { model | place = newPlace, debug = newDebug }
-                    , case newPlace of
-                        FoundPlace ( _, newPlace_ ) ->
-                            let
-                                newName =
-                                    (Content.WelshPlaces.getInfo newPlace_).name
-                            in
-                            Browser.Navigation.pushUrl
-                                model.key
-                                (buildUrl (Town newName))
 
-                        _ ->
-                            Cmd.none
+                        newModel =
+                            { model | place = newPlace, debug = newDebug }
+                    in
+                    ( newModel
+                    , Browser.Navigation.pushUrl
+                        newModel.key
+                        (Lib.Url.buildUrl newModel)
                     )
 
                 _ ->
                     ( model, Cmd.none )
 
         RequestSearch ->
-            ( { model | place = FindingPlace model.input }
+            ( { model | place = Lib.FindingPlace model.input }
             , Task.perform (\() -> DoSearch) (Process.sleep changeDelay)
             )
 
@@ -365,9 +278,7 @@ update msg model =
             )
 
         UrlChange url ->
-            -- postInit model.viewport model.imageUrls url model.key
-            -- TODO: why should I not remove the line above?
-            ( model, Cmd.none )
+            ( Lib.Url.applyUrlToModel url model, Cmd.none )
 
         Resize width height ->
             ( { model
@@ -388,10 +299,10 @@ view model =
     let
         town =
             case model.place of
-                FoundPlace ( _, place ) ->
+                Lib.FoundPlace ( _, place ) ->
                     Just ( Content.WelshPlaces.getInfo place, place )
 
-                AboutToSearch ( _, place ) ->
+                Lib.AboutToSearch ( _, place ) ->
                     Just ( Content.WelshPlaces.getInfo place, place )
 
                 _ ->
@@ -654,16 +565,16 @@ view model =
                     , E.htmlAttribute <|
                         Html.Attributes.class
                             (case model.place of
-                                Searching ->
+                                Lib.Searching ->
                                     "show"
 
-                                AboutToSearch _ ->
+                                Lib.AboutToSearch _ ->
                                     "showing"
 
-                                FoundPlace _ ->
+                                Lib.FoundPlace _ ->
                                     "hide"
 
-                                FindingPlace _ ->
+                                Lib.FindingPlace _ ->
                                     "hiding"
                             )
                     ]
@@ -829,20 +740,6 @@ extractViewport { viewport } =
     { width = round viewport.width
     , height = round viewport.height
     }
-
-
-search : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
-search str =
-    let
-        results =
-            Lib.waleSearch str
-    in
-    case List.head results of
-        Just tuple ->
-            ( FoundPlace tuple, results )
-
-        Nothing ->
-            ( Searching, [] )
 
 
 px : Int -> String
