@@ -510,7 +510,7 @@ view model =
                             ]
                             [ E.paragraph
                                 [ E.spacing lineSpacing ]
-                                [ E.text "The Welsh Whacker is a website build by Harry Sarson and Phillip Gull. The Welsh Whacker is written in "
+                                [ E.text "The Welsh Whacker is a website built by Harry Sarson and Phillip Gull. The Welsh Whacker is written in "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://elm-lang.org"
@@ -568,7 +568,7 @@ view model =
                                     { url = "http://creativecommons.org/licenses/by/3.0"
                                     , label = E.text "CC 3.0 BY"
                                     }
-                                , E.text ". I am grateful to level "
+                                , E.text ". We am grateful to level "
                                 , E.link
                                     [ Font.color Color.anchor ]
                                     { url = "https://level.app/svg-to-elm"
