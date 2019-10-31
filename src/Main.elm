@@ -71,8 +71,9 @@ type alias Flags =
     , llandudno : String
     , llandysul : String
     , llanfairpwll : String
+    , llanfairpwllgwyngyll : String
     , llangefni : String
-    , llanwrst : String
+    , llanrwst : String
     , manorbier : String
     , merthyrTydfil : String
     , nefyn : String
@@ -803,3 +804,33 @@ getImageUrl place imageUrls =
 
         Content.WelshPlaces.YsbytyCynfyn ->
             imageUrls.ysbytyCynfyn
+
+        Content.WelshPlaces.Llanfairpwllgwyngyll ->
+            imageUrls.llanfairpwllgwyngyll
+
+        Content.WelshPlaces.Llangefni ->
+            imageUrls.llangefni
+
+        Content.WelshPlaces.Kidwelly ->
+            imageUrls.kidwelly
+
+        Content.WelshPlaces.Laugharne ->
+            imageUrls.laugharne
+
+        Content.WelshPlaces.Lampeter ->
+            imageUrls.lampeter
+
+        Content.WelshPlaces.Llandysul ->
+            imageUrls.llandysul
+
+        Content.WelshPlaces.Llanrwst ->
+            imageUrls.llanrwst
+
+        Content.WelshPlaces.Denbigh ->
+            imageUrls.denbigh
+
+        Content.WelshPlaces.Prestatyn ->
+            imageUrls.prestatyn
+
+        Content.WelshPlaces.Nefyn ->
+            imageUrls.nefyn

@@ -24,7 +24,8 @@ import llandudno from	"./images/Llandudno.jpg";
 import llandysul from	"./images/Llandysul.jpg";
 import llanfairpwll from	"./images/Llanfairpwll.jpg";
 import llangefni from	"./images/Llangefni.jpg";
-import llanwrst from	"./images/Llanwrst.jpg";
+import llanrwst from	"./images/Llanrwst.jpg";
+import llanfairpwllgwyngyll from	"./images/Llanfairpwllgwyngyll.jpg";
 import manorbier from	"./images/Manorbier.jpg";
 import merthyrTydfil from	"./images/Merthyr_Tydfil.jpg";
 import nefyn from	"./images/Nefyn.jpg";
@@ -64,7 +65,8 @@ Elm.Main.init({
     llandysul,
     llanfairpwll,
     llangefni,
-    llanwrst,
+    llanrwst,
+    llanfairpwllgwyngyll,
     manorbier,
     merthyrTydfil,
     nefyn,
