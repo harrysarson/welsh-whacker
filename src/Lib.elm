@@ -1,4 +1,4 @@
-module Lib exposing (PlaceResult(..), enterDecoder, onEnter, setOpacity, walesSearch)
+module Lib exposing (enterDecoder, onEnter, setOpacity, walesSearch)
 
 import Content.WelshPlaces
 import Dict
@@ -19,14 +19,7 @@ type alias Row =
     }
 
 
-type PlaceResult
-    = Searching
-    | AboutToSearch ( Float, Content.WelshPlaces.Place )
-    | FoundPlace ( Float, Content.WelshPlaces.Place )
-    | FindingPlace String
-
-
-walesSearch : String -> ( PlaceResult, List ( Float, Content.WelshPlaces.Place ) )
+walesSearch : String -> ( Maybe ( Float, Content.WelshPlaces.Place ), List ( Float, Content.WelshPlaces.Place ) )
 walesSearch word =
     let
         results =
@@ -42,10 +35,10 @@ walesSearch word =
     in
     case List.head results of
         Just tuple ->
-            ( FoundPlace tuple, results )
+            ( Just tuple, results )
 
         Nothing ->
-            ( Searching, [] )
+            ( Nothing, [] )
 
 
 enterDecoder : msg -> Decode.Decoder msg

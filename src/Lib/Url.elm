@@ -12,7 +12,7 @@ import Url.Parser.Query
 type alias ModelFragment a =
     { a
         | input : String
-        , place : Lib.PlaceResult
+        , place : Maybe ( Float, Content.WelshPlaces.Place )
         , debug : Maybe Lib.Debugging.Info
     }
 
@@ -32,7 +32,7 @@ applyUrlToModel url model =
                     Lib.walesSearch t
 
                 _ ->
-                    ( Lib.Searching, [] )
+                    ( Nothing, [] )
     in
     { model
         | input =
@@ -90,7 +90,7 @@ buildUrl model =
     Url.Builder.relative []
         ([ Just
             (case model.place of
-                Lib.FoundPlace ( _, place ) ->
+                Just ( _, place ) ->
                     let
                         townName =
                             (Content.WelshPlaces.getInfo place).name

@@ -31,16 +31,10 @@ import Lib
 import Lib.Debugging
 import Lib.InitApp
 import Lib.Url
-import Process
 import Svg
 import Svg.Attributes
 import Task
 import Url
-
-
-changeDelay : Float
-changeDelay =
-    0
 
 
 type alias ViewportSize =
@@ -130,7 +124,7 @@ preInit _ _ _ =
 postInit : ViewportSize -> Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 postInit viewport flags url key =
     ( { input = ""
-      , place = Lib.Searching
+      , place = Nothing
       , key = key
       , showInfo = False
       , viewport = viewport
@@ -144,7 +138,7 @@ postInit viewport flags url key =
 
 type alias Model =
     { input : String
-    , place : Lib.PlaceResult
+    , place : Maybe ( Float, Content.WelshPlaces.Place )
     , key : Browser.Navigation.Key
     , showInfo : Bool
     , viewport : ViewportSize
@@ -157,9 +151,7 @@ type Msg
     = Typing String
     | ClickedLink Browser.UrlRequest
     | UrlChange Url.Url
-    | RequestSearch
     | DoSearch
-    | RequestInput
     | GoToInput
     | ShowInfo
     | HideInfo
@@ -209,63 +201,39 @@ update msg model =
                     , Browser.Navigation.load url
                     )
 
-        RequestInput ->
-            case model.place of
-                Lib.FoundPlace p ->
-                    ( { model | place = Lib.AboutToSearch p }
-                    , Task.perform (\() -> GoToInput) (Process.sleep changeDelay)
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
         GoToInput ->
-            case model.place of
-                Lib.AboutToSearch _ ->
-                    let
-                        newModel =
-                            { model | place = Lib.Searching }
-                    in
-                    ( newModel
-                    , Browser.Navigation.pushUrl
-                        model.key
-                        (Lib.Url.buildUrl newModel)
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
+            -- TODO: consider not pushing URL here if nothing changes
+            let
+                newModel =
+                    { model | place = Nothing }
+            in
+            ( newModel
+            , Browser.Navigation.pushUrl
+                model.key
+                (Lib.Url.buildUrl newModel)
+            )
 
         DoSearch ->
-            case model.place of
-                Lib.FindingPlace str ->
-                    let
-                        ( newPlace, debugMatches ) =
-                            Lib.walesSearch str
+            let
+                ( newPlace, debugMatches ) =
+                    Lib.walesSearch model.input
 
-                        newDebug =
-                            Maybe.map
-                                (\oldDebug ->
-                                    { oldDebug
-                                        | matches = Just debugMatches
-                                    }
-                                )
-                                model.debug
+                newDebug =
+                    Maybe.map
+                        (\oldDebug ->
+                            { oldDebug
+                                | matches = Just debugMatches
+                            }
+                        )
+                        model.debug
 
-                        newModel =
-                            { model | place = newPlace, debug = newDebug }
-                    in
-                    ( newModel
-                    , Browser.Navigation.pushUrl
-                        newModel.key
-                        (Lib.Url.buildUrl newModel)
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        RequestSearch ->
-            ( { model | place = Lib.FindingPlace model.input }
-            , Task.perform (\() -> DoSearch) (Process.sleep changeDelay)
+                newModel =
+                    { model | place = newPlace, debug = newDebug }
+            in
+            ( newModel
+            , Browser.Navigation.pushUrl
+                newModel.key
+                (Lib.Url.buildUrl newModel)
             )
 
         ShowInfo ->
@@ -299,15 +267,7 @@ view : Model -> Browser.Document Msg
 view model =
     let
         town =
-            case model.place of
-                Lib.FoundPlace ( _, place ) ->
-                    Just ( Content.WelshPlaces.getInfo place, place )
-
-                Lib.AboutToSearch ( _, place ) ->
-                    Just ( Content.WelshPlaces.getInfo place, place )
-
-                _ ->
-                    Nothing
+            Maybe.map (\( _, place ) -> ( Content.WelshPlaces.getInfo place, place )) model.place
 
         inputBox =
             E.row
@@ -335,7 +295,7 @@ view model =
                             }
                         ]
                     , E.height E.fill
-                    , Lib.onEnter RequestSearch
+                    , Lib.onEnter DoSearch
                     ]
                     { onChange = Typing
                     , text = model.input
@@ -384,7 +344,7 @@ view model =
                             Nothing
 
                         else
-                            Just RequestSearch
+                            Just DoSearch
                     }
                 ]
 
@@ -563,21 +523,6 @@ view model =
                     [ E.width E.fill
                     , E.height E.fill
                     , E.centerX
-                    , E.htmlAttribute <|
-                        Html.Attributes.class
-                            (case model.place of
-                                Lib.Searching ->
-                                    "show"
-
-                                Lib.AboutToSearch _ ->
-                                    "showing"
-
-                                Lib.FoundPlace _ ->
-                                    "hide"
-
-                                Lib.FindingPlace _ ->
-                                    "hiding"
-                            )
                     ]
                     [ let
                         paddingBelowTitle =
@@ -665,7 +610,7 @@ view model =
                                     , E.alignBottom
                                     ]
                                     [ E.el
-                                        [ Events.onClick RequestInput
+                                        [ Events.onClick GoToInput
                                         , E.pointer
                                         , E.alignLeft
                                         , E.alignBottom

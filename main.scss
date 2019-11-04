@@ -12,47 +12,10 @@ html, body {
     line-height: 1.2 !important;
 }
 
-.hiding, .hide, .showing, .show {
-    & > * {
-        &:first-child, &:last-child > * {
-            @if $animate {
-                transition-property: transform;
-                transition-duration: 0.4s;
-            }
-        }
-    }
+.input-box {
+    transform: translateY(-50%);
 }
 
-.showing, .hiding {
-    & > *:first-child {
-        transform: translateY(-500px);
-    }
-
-    & > *:last-child {
-        & > .input-box, .town-image {
-            transform: translate(-150%, 300%) rotate(90deg);
-        }
-        & > * {
-            transform: translateY(500px);
-        }
-    }
-}
-
-.show, .hide {
-
-    & > *:first-child {
-        transform: translateY(0px);
-    }
-
-    & > *:last-child {
-        & > .input-box {
-            transform: translate(0, -50%) rotate(0);
-        }
-        & > .town-image {
-            transform: translate(0, -20%) rotate(0);
-        }
-        & > * {
-            transform: translateY(0px);
-        }
-    }
+.town-image {
+    transform: translateY(-20%);
 }
