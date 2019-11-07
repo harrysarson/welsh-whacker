@@ -130,9 +130,10 @@ postInit viewport flags url key =
       , viewport = viewport
       , imageUrls = flags
       , debug = Nothing
+      , canGoBack = False
       }
         |> Lib.Url.applyUrlToModel url
-    , Task.attempt (\_ -> Noop) (Browser.Dom.focus "wales-place-input")
+    , Task.attempt (\_ -> Noop) focusInput
     )
 
 
@@ -144,6 +145,7 @@ type alias Model =
     , viewport : ViewportSize
     , imageUrls : Flags
     , debug : Maybe Lib.Debugging.Info
+    , canGoBack : Bool
     }
 
 
@@ -202,15 +204,18 @@ update msg model =
                     )
 
         GoToInput ->
-            -- TODO: consider not pushing URL here if nothing changes
             let
                 newModel =
                     { model | place = Nothing }
             in
             ( newModel
-            , Browser.Navigation.pushUrl
-                model.key
-                (Lib.Url.buildUrl newModel)
+            , if model.canGoBack then
+                Browser.Navigation.back model.key 1
+
+              else
+                Browser.Navigation.pushUrl
+                    model.key
+                    (Lib.Url.buildUrl newModel)
             )
 
         DoSearch ->
@@ -228,7 +233,11 @@ update msg model =
                         model.debug
 
                 newModel =
-                    { model | place = newPlace, debug = newDebug }
+                    { model
+                        | place = newPlace
+                        , debug = newDebug
+                        , canGoBack = True
+                    }
             in
             ( newModel
             , Browser.Navigation.pushUrl
@@ -247,7 +256,7 @@ update msg model =
             )
 
         UrlChange url ->
-            ( Lib.Url.applyUrlToModel url model, Cmd.none )
+            ( Lib.Url.applyUrlToModel url model, Task.attempt (\_ -> Noop) focusInput )
 
         Resize width height ->
             ( { model
@@ -779,3 +788,8 @@ getImageUrl place imageUrls =
 
         Content.WelshPlaces.Nefyn ->
             imageUrls.nefyn
+
+
+focusInput : Task.Task Browser.Dom.Error ()
+focusInput =
+    Browser.Dom.focus "wales-place-input"
