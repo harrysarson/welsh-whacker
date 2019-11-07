@@ -17,6 +17,10 @@ type alias ModelFragment a =
     }
 
 
+{-| Call this function when ever the URL of the welsh-whacker
+changes (on page load or on when the user clicks back/forwards).
+This function will helpfully update your model based on the URL.
+-}
 applyUrlToModel : Url -> ModelFragment a -> ModelFragment a
 applyUrlToModel url model =
     let
@@ -31,7 +35,16 @@ applyUrlToModel url model =
                 Town t ->
                     Lib.walesSearch t
 
-                _ ->
+                Input str ->
+                    ( Nothing
+                    , if debug then
+                        Tuple.second (Lib.walesSearch str)
+
+                      else
+                        []
+                    )
+
+                Empty ->
                     ( Nothing, [] )
     in
     { model
